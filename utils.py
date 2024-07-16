@@ -3,8 +3,8 @@ import pandas as pd
 
 class Args:
 
-    def __init__(self, batch_size=8, n_epochs=5, learning_rate=1e+5, freeze_pretrained=False):
-        self.batch_size=batch_size
+    def __init__(self, batch_size=8, n_epochs=2, learning_rate=1e+5, freeze_pretrained=False):
+        self.batch_size = batch_size
         self.n_epochs = n_epochs
         self.learning_rate = learning_rate
         self.freeze_pretrained = freeze_pretrained
