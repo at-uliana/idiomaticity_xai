@@ -3,7 +3,10 @@ import pandas as pd
 
 class Args:
 
-    def __init__(self, batch_size=8, n_epochs=2, learning_rate=1e+5, freeze_pretrained=False):
+    def __init__(self, data_path, split_path,
+                 batch_size=8, n_epochs=2, learning_rate=1e+5, freeze_pretrained=False):
+        self.data_path = data_path
+        self.split_path = split_path
         self.batch_size = batch_size
         self.n_epochs = n_epochs
         self.learning_rate = learning_rate
