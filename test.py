@@ -2,8 +2,6 @@ from transformers import XLMRobertaTokenizer
 from data import IdiomDataset
 import torch
 import os, random
-from pprint import pprint
-import numpy as np
 from torch.utils.data import DataLoader
 from classifier import IdiomaticityClassifier
 from utils import Args, train_test_dev_split
@@ -14,7 +12,6 @@ from torch.optim import AdamW
 # Reproducibility
 seed_value = 42
 random.seed(seed_value)
-np.random.seed(seed_value)
 torch.manual_seed(seed_value)
 torch.cuda.manual_seed(seed_value)
 torch.cuda.manual_seed_all(seed_value)
@@ -24,12 +21,11 @@ os.environ['PYTHONHASHSEED'] = str(seed_value)
 
 # Setting up the device
 device = "cuda" if torch.cuda.is_available() else "cpu"
-print(device)
 
 # Setting up arguments (TODO: replace with ArgParser)
 args = Args(data_path='../../data/magpie+semeval+epie.tsv',
             split_path='../../data/split/zero-shot/split_0.tsv',
-            batch_size=8, learning_rate=5e-5, n_epochs=2)
+            batch_size=8, learning_rate=5e-5, n_epochs=1)
 
 # Setting up model type and creating model instance
 MODEL_TYPE = 'xlm-roberta-base'
@@ -44,9 +40,9 @@ optimizer = AdamW(model.parameters(), lr=args.learning_rate)
 # Loading data
 train, dev, test = train_test_dev_split(args.data_path, args.split_path)
 
-train_set = IdiomDataset(train, tokenizer=tokenizer)
-test_set = IdiomDataset(test, tokenizer=tokenizer)
-dev_set = IdiomDataset(dev, tokenizer=tokenizer)
+train_set = IdiomDataset(train, tokenizer=tokenizer, max_length=args.max_length)
+test_set = IdiomDataset(test, tokenizer=tokenizer, max_length=args.max_length)
+dev_set = IdiomDataset(dev, tokenizer=tokenizer, max_length=args.max_length)
 
 train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True)
 test_loader = DataLoader(test_set, batch_size=args.batch_size, shuffle=True)
@@ -68,6 +64,9 @@ trainer = IdiomaticityTrainer(
 )
 
 trainer.fine_tune()
-outputs = trainer.test_model()
+# outputs = trainer.test_model()
+predictions, prediction_probs, true_labels = trainer.get_predictions()
+print(predictions)
+print(prediction_probs)
+print(true_labels)
 trainer.save_config('results.json')
-pprint(trainer.results)

@@ -1,6 +1,8 @@
 import torch
 import json
+import os
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+
 
 class IdiomaticityTrainer:
 
@@ -22,8 +24,6 @@ class IdiomaticityTrainer:
             'n val batches': len(val_loader),
             'n test batches': len(test_loader)
         }
-        for arg in args.__dict__:
-            self.results[arg] = args.__dict__[arg]
         print("Done.")
 
     def train_batch(self, batch):
@@ -66,10 +66,12 @@ class IdiomaticityTrainer:
         val_loss, val_acc = self.evaluate_model()
         print(f"Initial validation loss: {val_loss:.3f}")
         print(f"Initial validation accuracy: {val_acc:.3f}")
+        print()
         self.results['validation loss'].append(val_loss)
         self.results['validation accuracy'].append(val_acc)
 
         print("--- Start fine-tuning ---")
+        print()
         for epoch in range(self.args.n_epochs):
             print('-------------------')
             print(f"Epoch {epoch+1}/{self.args.n_epochs}")
@@ -88,13 +90,26 @@ class IdiomaticityTrainer:
                 i += 1
                 if i == 3:
                     break
-            print("Evaluate on the validation data set...")
+
+            # Save model after each epoch:
+            if self.args.save_checkpoints:
+                path = os.path.join(self.args.save_model_to, self.args.model_name + f" e{epoch}.pt")
+                print(f"Saving checkpoint to {path}.")
+                self.save_model(path)
+            else:
+                # if this is the last epoch:
+                if epoch == self.args.n_epochs - 1:
+                    path = os.path.join(self.args.model_dir, self.args.model_name + '.pt')
+                    print(f"Saving final model to {path}.")
+                    self.save_model(path)
+
             val_loss, val_acc = self.evaluate_model()
             print(f"Validation loss: {val_loss:.3f}")
             print(f"Validation accuracy: {val_acc:.3f}")
             self.results['validation loss'].append(val_loss)
             self.results['validation accuracy'].append(val_acc)
             print("Done.")
+            print()
 
     def evaluate_model(self):
         self.model.eval()
@@ -118,7 +133,8 @@ class IdiomaticityTrainer:
         validation_accuracy = validation_accuracy / 3
         return validation_loss, validation_accuracy
 
-    def save_config(self, path):
+    def save_config(self):
+        path = os.path.join(self.args.output_dir, self.args.model_name + " results.json")
         json.dump(self.results, open(path, 'w'), indent=True)
 
     def save_model(self, path):
@@ -153,76 +169,39 @@ class IdiomaticityTrainer:
         self.results['test'] = test_dict
         return test_dict
 
+    def get_predictions(self, external_dataloader=None):
+        if external_dataloader:
+            test_loader = external_dataloader
+        else:
+            test_loader = self.test_loader
 
-#
-# # Train model on one batch
-# def train_batch(model, batch, optimizer, device, args):
-#     model.train()
-#     input_ids, attention_mask, labels = batch
-#     input_ids = input_ids.clone().detach()
-#     attention_mask = attention_mask.clone().detach()
-#     labels = labels.clone().detach()
-#
-#     optimizer.zero_grad()
-#
-#     outputs = model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
-#     loss = outputs.loss
-#     loss.backward()
-#
-#     torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-#
-#     optimizer.step()
-#     return loss
-#
-#
-# # Calculate validation loss
-# def evaluate_model(model, validation_loader):
-#     model.eval()
-#     val_loss = 0.0
-#     with torch.no_grad():
-#         i = 0
-#         for batch in validation_loader:
-#             input_ids, attention_mask, labels = batch
-#             outputs = model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
-#             loss = outputs.loss
-#             val_loss += loss.item()
-#             i += 1
-#             if i == 5:
-#                 break
-#     epoch_val_loss = val_loss / 5
-#     return epoch_val_loss
-#
-#
-# # Main training loop
-# def train_loop(model, train_dataloader, validation_dataloader, epochs, optimizer, device, args):
-#
-#     results = {
-#         'batch_loss': [],        # train loss calculated on each batch
-#         'batch_acc': [],         # train accuracy calculated on each batch
-#         'validation_loss': [],   # validation loss after each epoch
-#         'validation_acc': []     # validation accuracy after each epoch
-#     }
-#
-#     val_loss = evaluate_model(model, validation_dataloader)
-#     print(f"Initial validation loss: {val_loss:.3f}")
-#     results['validation_loss'].append(val_loss)
-#
-#     for epoch in range(epochs):
-#         print(f"--- Epoch {epoch+1}/{epochs} ---")
-#         i = 0
-#         for batch in train_dataloader:
-#             print(f"\tBatch {i+1}/{3}", end=' ')
-#             batch_loss = train_batch(model, batch, optimizer, device, args)
-#             print(f"--- {batch_loss:.3f}")
-#             results['batch_loss'].append(batch_loss.item())
-#             i += 1
-#             if i == 3:
-#                 break
-#         print("Evaluate on the validation data set...")
-#         val_loss = evaluate_model(model, validation_dataloader)
-#         print(f"Validation loss: {val_loss:.3f}")
-#         results['validation_loss'].append(val_loss)
-#         print("Done.")
-#
-#     return results
-#
+        self.model.eval()
+        predictions = []
+        prediction_probs = []
+        true_labels = []
+
+        with torch.no_grad():
+            i = 0
+            for batch in test_loader:
+                input_ids, attention_mask, labels = batch
+                outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
+                loss, logits = outputs.loss, outputs.logits
+
+                # Save `true` labels
+                true_labels.extend(labels)
+
+                # Get probabilities
+                probs = torch.softmax(logits, dim=1)
+                prediction_probs.extend(probs)
+
+                # Get predictions
+                preds = torch.argmax(probs, dim=1)
+                predictions.extend(preds)
+                i += 1
+                if i == 10:
+                    break
+
+            predictions = torch.stack(predictions)
+            prediction_probs = torch.stack(prediction_probs)
+            true_labels = torch.stack(true_labels)
+            return predictions, prediction_probs, true_labels

@@ -7,7 +7,7 @@ MODEL_TYPE = 'xlm-roberta-base'
 
 class IdiomDataset(Dataset):
 
-    def __init__(self, data, tokenizer, text_col='sentence', label_col='label', max_length=128):
+    def __init__(self, data, tokenizer, max_length):
         self.data = data
         self.max_length = max_length
         self.tokenizer = tokenizer
@@ -20,7 +20,6 @@ class IdiomDataset(Dataset):
                                 truncation=True,
                                 max_length=self.max_length,
                                 return_tensors='pt')
-        #         output = (tokens['input_ids'][0], tokens['attention_mask'][0], label)
         return tokens['input_ids'][0], tokens['attention_mask'][0], label
         # return tokens
 
@@ -41,9 +40,9 @@ if __name__ == "__main__":
 
     tokenizer = XLMRobertaTokenizer.from_pretrained(MODEL_TYPE)
 
-    train_set = IdiomDataset(train, tokenizer=tokenizer)
-    test_set = IdiomDataset(test, tokenizer=tokenizer)
-    dev_set = IdiomDataset(dev, tokenizer=tokenizer)
+    train_set = IdiomDataset(train, tokenizer=tokenizer, max_length=128)
+    test_set = IdiomDataset(test, tokenizer=tokenizer, max_length=128)
+    dev_set = IdiomDataset(dev, tokenizer=tokenizer, max_length=128)
 
     train_loader = DataLoader(train_set, batch_size=8, shuffle=True)
     test_loader = DataLoader(test_set, batch_size=8, shuffle=True)

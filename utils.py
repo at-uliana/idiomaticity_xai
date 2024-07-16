@@ -1,16 +1,32 @@
 import pandas as pd
+import os
+import json
 
 
-class Args:
+def make_dir(dir):
+    if not os.path.exists(dir):
+        os.makedirs(dir)
 
-    def __init__(self, data_path, split_path,
-                 batch_size=8, n_epochs=2, learning_rate=1e+5, freeze_pretrained=False):
-        self.data_path = data_path
-        self.split_path = split_path
-        self.batch_size = batch_size
-        self.n_epochs = n_epochs
-        self.learning_rate = learning_rate
-        self.freeze_pretrained = freeze_pretrained
+
+class ExperimentConfig:
+    # Temporary class to store configurations
+    # (to be replaced with `sacred` library)
+    def __init__(self, config_file):
+        config = json.load(open(config_file, 'r'))
+        self.seed = config['seed']
+        self.learning_rate = config['learning rate']
+        self.batch_size = config['batch size']
+        self.max_length = config['max length']
+        self.n_epochs = config['n epochs']
+        self.data_dir = config['data dir']
+        self.split_dir = config['split dir']
+        self.model_dir = config['model dir']
+        self.model_name = config['model name']
+        self.output_dir = config['output dir']
+        self.freeze = config['freeze']
+        self.save_checkpoints = config['save checkpoints']
+        # for key, value in config.items():
+        #     setattr(self, key.replace(" ", "_"), value)
 
 
 def train_test_dev_split(data_path, split_path, cols=None):
@@ -23,6 +39,35 @@ def train_test_dev_split(data_path, split_path, cols=None):
     test_data = data[data['split'] == 'test']
     dev_data = data[data['split'] == 'dev']
     return train_data[cols], dev_data[cols], test_data[cols]
+
+
+
+
+def read_command_line_for_fine_tuning():
+    parser = argparse.ArgumentParser(description='Fine-tuning XLM-Roberta for idiomaticity detection')
+
+    # I/O
+    parser.add_argument("--data_path", type=str, required=True)
+    parser.add_argument("--split_path", type=str, required=True)
+    parser.add_argument("--save_model_to", type=str, default=None)
+    parser.add_argument("--save_config_to", type=str, default='.')
+
+    # Model, data & optimizer
+    parser.add_argument("--learning_rate", type=float, default=1e-5)
+    parser.add_argument("--batch_size", type=int, default=8)
+    parser.add_argument("--freeze", type=bool, default=False)
+    parser.add_argument("--max_length", type=int, default=128)
+    parser.add_argument("--setting", type=str, default="zero-shot")
+    parser.add_argument("--model_name", type=str, default=None)
+    parser.add_argument("--n_epochs", type=int, default=3)
+
+
+    # Miscellaneous
+    parser.add_argument("--save_checkpoints", type=bool, default=False)
+    parser.add_argument("--seed", type=int, default=2024)
+
+    return parser
+
 #
 #
 # num_epochs = 1  # Only a few epochs for the test
