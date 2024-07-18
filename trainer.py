@@ -93,7 +93,7 @@ class IdiomaticityTrainer:
 
             # Save model after each epoch:
             if self.args.save_checkpoints:
-                path = os.path.join(self.args.save_model_to, self.args.model_name + f" e{epoch}.pt")
+                path = os.path.join(self.args.model_dir, self.args.model_name + f" e{epoch}.pt")
                 print(f"Saving checkpoint to {path}.")
                 self.save_model(path)
             else:
