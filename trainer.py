@@ -22,7 +22,8 @@ class IdiomaticityTrainer:
             'validation accuracy': [],
             'n train batches': len(train_loader),
             'n val batches': len(val_loader),
-            'n test batches': len(test_loader)
+            'n test batches': len(test_loader),
+            'device': self.device
         }
         print("Done.")
 

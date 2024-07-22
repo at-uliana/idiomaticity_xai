@@ -15,7 +15,12 @@ from trainer import IdiomaticityTrainer
 
 if __name__ == "__main__":
 
-    config = ExperimentConfig('config.json')
+    parser = argparse.ArgumentParser(description='Fine-tuning XLM-Roberta for idiomaticity detection')
+    parser.add_argument("--config_file", type=str, required=True)
+    args = parser.parse_args()
+
+    # Load configuration file
+    config = ExperimentConfig(args.config_file)
 
     # Prepare output directory
     make_dir(config.model_dir)
