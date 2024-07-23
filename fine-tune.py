@@ -70,6 +70,7 @@ if __name__ == "__main__":
 
     trainer.fine_tune()
     trainer.save_config()
+    raise ValueError
 
 
 

@@ -41,7 +41,6 @@ class IdiomaticityTrainer:
         print("Input IDs on CUDA:", input_ids.is_cuda)
         print("Attention mask on CUDA:", attention_mask.is_cuda)
         print("Labels on CUDA:", labels.is_cuda)
-        print("Model on CUDA:", self.model.is_cuda)
 
         # Zero out gradients
         self.optimizer.zero_grad()
