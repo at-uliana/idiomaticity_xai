@@ -16,8 +16,6 @@ class IdiomaticityTrainer:
         self.device = device
         self.args = args
         self.results = {
-            'batch train loss': [],
-            'batch train accuracy': [],
             'validation loss': [],
             'validation accuracy': [],
             'n train batches': len(train_loader),
@@ -60,58 +58,44 @@ class IdiomaticityTrainer:
     def fine_tune(self):
         # Calculate initial loss
         val_loss, val_acc = self.evaluate_model()
-        print(f"Initial validation loss: {val_loss:.3f}")
-        print(f"Initial validation accuracy: {val_acc:.3f}")
-        print()
         self.results['validation loss'].append(val_loss)
         self.results['validation accuracy'].append(val_acc)
 
-        print("--- Start fine-tuning ---")
-        print()
+        print("\nFine-tuning")
         for epoch in range(self.args.n_epochs):
-            print('-------------------')
-            print(f"Epoch {epoch}/{self.args.n_epochs}")
-            print('-------------------')
-            print(f"    Batch\t-\tLoss\t-\tAccuracy")
-            for i, batch in enumerate(self.train_loader):
-                print(f"\t{i+1}", end='\t')
-                batch_loss, batch_acc = self.train_batch(batch)
-                print(f"\t-\t{batch_loss:.3f}", end='')
-                print(f"\t-\t{batch_acc:.3f}")
+            print(f" - Epoch {epoch + 1} out of {self.args.n_epochs}")
+            for batch in self.train_loader:
+                _ = self.train_batch(batch)
 
-                self.results['batch train loss'].append(batch_loss.item())
-                self.results['batch train accuracy'].append(batch_acc)
+            # Calculate validation loss and accuracy
+            val_loss, val_acc = self.evaluate_model()
+            print(f"\tValidation loss: {val_loss:.3f}")
+            print(f"\tValidation accuracy: {val_acc:.3f}")
 
-            # Save model after each epoch:
+            # Save validation loss and accuracy
+            self.results['validation loss'].append(val_loss)
+            self.results['validation accuracy'].append(val_acc)
+
+            # Save model after each epoch if save_checkpoints=True:
             if self.args.save_checkpoints:
                 path = os.path.join(self.args.model_dir, self.args.model_name + f" e{epoch}.pt")
-                print(f"Saving checkpoint to {path}.")
+                print(f"\tSaving checkpoint to {path}.")
                 self.save_model(path)
             else:
                 # if this is the last epoch:
                 if epoch == self.args.n_epochs - 1:
                     path = os.path.join(self.args.model_dir, self.args.model_name + '.pt')
-                    print(f"Saving final model to {path}.")
+                    print(f"\tSaving final model to {path}.")
                     self.save_model(path)
-
-            val_loss, val_acc = self.evaluate_model()
-            print(f"Validation loss: {val_loss:.3f}")
-            print(f"Validation accuracy: {val_acc:.3f}")
-            self.results['validation loss'].append(val_loss)
-            self.results['validation accuracy'].append(val_acc)
-            print("Done.")
             print()
 
     def evaluate_model(self):
-        print("All parameters on GPU:", are_all_model_parameters_on_gpu(self.model))
-        print("All buffers on GPU:", are_all_model_buffers_on_gpu(self.model))
-        print()
-
         self.model.eval()
         validation_loss = 0.0
         validation_accuracy = 0.0
 
         with torch.no_grad():
+
             for batch in self.val_loader:
 
                 # Extract batch and send to GPU
@@ -127,6 +111,8 @@ class IdiomaticityTrainer:
                 predictions = torch.argmax(torch.softmax(logits, dim=1), dim=1)
                 accuracy = (predictions == labels).sum().item() / len(predictions)
                 validation_accuracy += accuracy
+                break
+
         validation_loss = validation_loss / len(self.val_loader)
         validation_accuracy = validation_accuracy / len(self.val_loader)
         return validation_loss, validation_accuracy
