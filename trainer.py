@@ -123,6 +123,17 @@ class IdiomaticityTrainer:
             i = 0
             for batch in self.val_loader:
                 input_ids, attention_mask, labels = batch
+                input_ids = input_ids.clone().detach()
+                attention_mask = attention_mask.clone().detach()
+                labels = labels.clone().detach()
+
+                input_ids.to(self.device)
+                attention_mask.to(self.device)
+                labels.to(self.device)
+                print("Input IDs on CUDA:", input_ids.is_cuda)
+                print("Attention mask on CUDA:", attention_mask.is_cuda)
+                print("Labels on CUDA:", labels.is_cuda)
+
                 outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
                 loss, logits = outputs.loss, outputs.logits
                 validation_loss += loss.item()
