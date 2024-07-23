@@ -65,9 +65,6 @@ class IdiomaticityTrainer:
         return loss, accuracy
 
     def fine_tune(self):
-        print("Sending model to CUDA")
-        self.model.to(self.device)
-
         # Calculate initial loss
         val_loss, val_acc = self.evaluate_model()
         print(f"Initial validation loss: {val_loss:.3f}")

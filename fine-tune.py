@@ -36,10 +36,13 @@ if __name__ == "__main__":
 
     # Setting up the device
     device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"Using device: {device}")
 
     # Setting up model type and creating model instance
     MODEL_TYPE = 'xlm-roberta-base'
     model = IdiomaticityClassifier(config)
+    print(f"Sending model to device {device}")
+    model.to(device)
 
     # Setting up tokenizer
     tokenizer = XLMRobertaTokenizer.from_pretrained(MODEL_TYPE)
