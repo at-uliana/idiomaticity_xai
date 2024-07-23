@@ -2,6 +2,7 @@ import torch
 import json
 import os
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+from utils import are_all_model_parameters_on_gpu, are_all_model_buffers_on_gpu
 
 
 class IdiomaticityTrainer:
@@ -29,9 +30,11 @@ class IdiomaticityTrainer:
         self.model.train()
 
         input_ids, attention_mask, labels = batch
-        input_ids.to(self.device)
-        attention_mask.to(self.device)
-        labels.to(self.device)
+        input_ids, attention_mask, labels = batch
+        print(f"Current device: {self.device}")
+        input_ids.to('cuda')
+        attention_mask.to('cuda')
+        labels.to('cuda')
         print("\tSent tensors to GPU.")
         print("\tInput IDs on GPU:", input_ids.is_cuda)
         print("\tAttention mask on GPU:", attention_mask.is_cuda)
@@ -111,6 +114,10 @@ class IdiomaticityTrainer:
             print()
 
     def evaluate_model(self):
+        print("All parameters on GPU:", are_all_model_parameters_on_gpu(self.model))
+        print("All buffers on GPU:", are_all_model_buffers_on_gpu(self.model))
+        print()
+
         self.model.eval()
         validation_loss = 0.0
         validation_accuracy = 0.0
@@ -118,10 +125,11 @@ class IdiomaticityTrainer:
         with torch.no_grad():
             i = 0
             for batch in self.val_loader:
+                print(f"Current device: {self.device}")
                 input_ids, attention_mask, labels = batch
-                input_ids.to(self.device)
-                attention_mask.to(self.device)
-                labels.to(self.device)
+                input_ids.to('cuda')
+                attention_mask.to('cuda')
+                labels.to('cuda')
                 print("\tSent tensors to GPU.")
                 print("\tInput IDs on GPU:", input_ids.is_cuda)
                 print("\tAttention mask on GPU:", attention_mask.is_cuda)

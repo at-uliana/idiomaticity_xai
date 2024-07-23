@@ -1,6 +1,7 @@
 from torch.utils.data import DataLoader, Dataset
 from transformers import XLMRobertaTokenizer
 from utils import train_test_dev_split
+import torch
 
 MODEL_TYPE = 'xlm-roberta-base'
 
@@ -21,7 +22,16 @@ class IdiomDataset(Dataset):
                                 max_length=self.max_length,
                                 return_tensors='pt')
         return tokens['input_ids'][0], tokens['attention_mask'][0], label
-        # return tokens
+
+    # def __getitem__(self, i):
+    #     text = self.data.iloc[i]['sentence']
+    #     label = self.data.iloc[i]['label']
+    #     tokens = self.tokenizer(text,
+    #                             padding='max_length',
+    #                             truncation=True,
+    #                             max_length=self.max_length,
+    #                             return_tensors='pt')
+    #     return tokens, torch.tensor(label)
 
     def __str__(self):
         return f"<IdiomDataset ({len(self.data)} sents, {self.data['idiom'].nunique()} idioms)>"

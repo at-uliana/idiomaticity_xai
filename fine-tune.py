@@ -73,7 +73,7 @@ if __name__ == "__main__":
         val_loader=dev_loader,
         args=config
     )
-    print("Initialized trainer.")
+    print(f"Initialized trainer. Device: {trainer.device}")
 
     print("All parameters on GPU:", are_all_model_parameters_on_gpu(model))
     print("All buffers on GPU:", are_all_model_buffers_on_gpu(model))
