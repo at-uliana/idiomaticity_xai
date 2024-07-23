@@ -29,7 +29,7 @@ class IdiomaticityTrainer:
 
     def train_batch(self, batch):
         self.model.train()
-        self.model.to(self.device)
+
         input_ids, attention_mask, labels = batch
         input_ids = input_ids.clone().detach()
         attention_mask = attention_mask.clone().detach()
@@ -38,6 +38,10 @@ class IdiomaticityTrainer:
         input_ids.to(self.device)
         attention_mask.to(self.device)
         labels.to(self.device)
+        print("Input IDs on CUDA:", input_ids.is_cuda)
+        print("Attention mask on CUDA:", attention_mask.is_cuda)
+        print("Labels on CUDA:", labels.is_cuda)
+        print("Model on CUDA:", self.model.is_cuda)
 
         # Zero out gradients
         self.optimizer.zero_grad()
@@ -62,6 +66,8 @@ class IdiomaticityTrainer:
         return loss, accuracy
 
     def fine_tune(self):
+        print("Sending model to CUDA")
+        self.model.to(self.device)
 
         # Calculate initial loss
         val_loss, val_acc = self.evaluate_model()
