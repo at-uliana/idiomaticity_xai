@@ -3,6 +3,18 @@ import os
 import json
 
 
+def is_model_on_gpu(model):
+    return next(model.parameters()).is_cuda
+
+
+def are_all_model_parameters_on_gpu(model):
+    return all(p.is_cuda for p in model.parameters())
+
+
+def are_all_model_buffers_on_gpu(model):
+    return all(b.is_cuda for b in model.buffers())
+
+
 def make_dir(dir):
     if not os.path.exists(dir):
         os.makedirs(dir)

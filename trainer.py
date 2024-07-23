@@ -7,7 +7,6 @@ from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_sc
 class IdiomaticityTrainer:
 
     def __init__(self, model, optimizer, device, train_loader, val_loader, test_loader, args):
-        print("Initializing the trainer...")
         self.model = model
         self.train_loader = train_loader
         self.val_loader = val_loader
@@ -25,22 +24,19 @@ class IdiomaticityTrainer:
             'n test batches': len(test_loader),
             'device': self.device
         }
-        print("Done.")
 
     def train_batch(self, batch):
         self.model.train()
 
         input_ids, attention_mask, labels = batch
-        input_ids = input_ids.clone().detach()
-        attention_mask = attention_mask.clone().detach()
-        labels = labels.clone().detach()
-
         input_ids.to(self.device)
         attention_mask.to(self.device)
         labels.to(self.device)
-        print("Input IDs on CUDA:", input_ids.is_cuda)
-        print("Attention mask on CUDA:", attention_mask.is_cuda)
-        print("Labels on CUDA:", labels.is_cuda)
+        print("\tSent tensors to GPU.")
+        print("\tInput IDs on GPU:", input_ids.is_cuda)
+        print("\tAttention mask on GPU:", attention_mask.is_cuda)
+        print("\tLabels on GPU:", labels.is_cuda)
+        print()
 
         # Zero out gradients
         self.optimizer.zero_grad()
@@ -123,16 +119,14 @@ class IdiomaticityTrainer:
             i = 0
             for batch in self.val_loader:
                 input_ids, attention_mask, labels = batch
-                input_ids = input_ids.clone().detach()
-                attention_mask = attention_mask.clone().detach()
-                labels = labels.clone().detach()
-
                 input_ids.to(self.device)
                 attention_mask.to(self.device)
                 labels.to(self.device)
-                print("Input IDs on CUDA:", input_ids.is_cuda)
-                print("Attention mask on CUDA:", attention_mask.is_cuda)
-                print("Labels on CUDA:", labels.is_cuda)
+                print("\tSent tensors to GPU.")
+                print("\tInput IDs on GPU:", input_ids.is_cuda)
+                print("\tAttention mask on GPU:", attention_mask.is_cuda)
+                print("\tLabels on GPU:", labels.is_cuda)
+                print()
 
                 outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
                 loss, logits = outputs.loss, outputs.logits

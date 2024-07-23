@@ -10,7 +10,7 @@ from data import IdiomDataset
 from utils import make_dir
 from torch.utils.data import DataLoader
 from classifier import IdiomaticityClassifier
-from utils import ExperimentConfig, train_test_dev_split
+from utils import ExperimentConfig, train_test_dev_split, are_all_model_buffers_on_gpu, are_all_model_parameters_on_gpu
 from trainer import IdiomaticityTrainer
 
 if __name__ == "__main__":
@@ -46,9 +46,11 @@ if __name__ == "__main__":
 
     # Setting up tokenizer
     tokenizer = XLMRobertaTokenizer.from_pretrained(MODEL_TYPE)
+    print("Initialized tokenizer.")
 
     # Setting up optimizer
     optimizer = AdamW(model.parameters(), lr=config.learning_rate)
+    print("Initialized optimizer.")
 
     # Loading data
     train, dev, test = train_test_dev_split(config.data_dir, config.split_dir)
@@ -60,6 +62,7 @@ if __name__ == "__main__":
     train_loader = DataLoader(train_set, batch_size=config.batch_size, shuffle=True)
     test_loader = DataLoader(test_set, batch_size=config.batch_size, shuffle=True)
     dev_loader = DataLoader(dev_set, batch_size=config.batch_size, shuffle=True)
+    print("Loaded data.")
 
     trainer = IdiomaticityTrainer(
         model=model,
@@ -70,9 +73,16 @@ if __name__ == "__main__":
         val_loader=dev_loader,
         args=config
     )
+    print("Initialized trainer.")
+
+    print("All parameters on GPU:", are_all_model_parameters_on_gpu(model))
+    print("All buffers on GPU:", are_all_model_buffers_on_gpu(model))
+    print()
 
     trainer.fine_tune()
+    print("Finished fine-tuning.")
     trainer.save_config()
+    print("Saved configs.")
 
 
 # args = read_command_line_for_fine_tuning()
