@@ -29,16 +29,11 @@ class IdiomaticityTrainer:
     def train_batch(self, batch):
         self.model.train()
 
-        print(f"Current device: {self.device}")
+        # Send batch to gpu
         input_ids, attention_mask, labels = batch
-        input_ids = input_ids.clone.detach.to('cuda')
-        attention_mask = attention_mask.to('cuda')
-        labels = labels.to('cuda')
-        print("\tSent tensors to GPU.")
-        print("\tInput IDs on GPU:", input_ids.device)
-        print("\tAttention mask on GPU:", attention_mask.device)
-        print("\tLabels on GPU:", labels.device)
-        print()
+        input_ids = input_ids.to(self.device)
+        attention_mask = attention_mask.to(self.device)
+        labels = labels.to(self.device)
 
         # Zero out gradients
         self.optimizer.zero_grad()
@@ -75,22 +70,17 @@ class IdiomaticityTrainer:
         print()
         for epoch in range(self.args.n_epochs):
             print('-------------------')
-            print(f"Epoch {epoch+1}/{self.args.n_epochs}")
+            print(f"Epoch {epoch}/{self.args.n_epochs}")
             print('-------------------')
             print(f"    Batch\t-\tLoss\t-\tAccuracy")
-            i = 0
-            for batch in self.train_loader:
-                print(f"\t{i+1}/{3}", end='\t')
+            for i, batch in enumerate(self.train_loader):
+                print(f"\t{i+1}", end='\t')
                 batch_loss, batch_acc = self.train_batch(batch)
                 print(f"\t-\t{batch_loss:.3f}", end='')
                 print(f"\t-\t{batch_acc:.3f}")
 
                 self.results['batch train loss'].append(batch_loss.item())
                 self.results['batch train accuracy'].append(batch_acc)
-
-                i += 1
-                if i == 3:
-                    break
 
             # Save model after each epoch:
             if self.args.save_checkpoints:
@@ -122,30 +112,23 @@ class IdiomaticityTrainer:
         validation_accuracy = 0.0
 
         with torch.no_grad():
-            i = 0
             for batch in self.val_loader:
-                print(f"Current device: {self.device}")
-                input_ids, attention_mask, labels = batch
-                input_ids = input_ids.clone.detach.to('cuda')
-                attention_mask = attention_mask.to('cuda')
-                labels = labels.to('cuda')
-                print("\tSent tensors to GPU.")
-                print("\tInput IDs on GPU:", input_ids.device)
-                print("\tAttention mask on GPU:", attention_mask.device)
-                print("\tLabels on GPU:", labels.device)
-                print()
 
+                # Extract batch and send to GPU
+                input_ids, attention_mask, labels = batch
+                input_ids = input_ids.to(self.device)
+                attention_mask = attention_mask.to(self.device)
+                labels = labels.to(self.device)
+
+                # Evaluate on batch, calculate loss and accuracy
                 outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
                 loss, logits = outputs.loss, outputs.logits
                 validation_loss += loss.item()
                 predictions = torch.argmax(torch.softmax(logits, dim=1), dim=1)
-                accuracy = (predictions == labels).sum().item()/len(predictions)
+                accuracy = (predictions == labels).sum().item() / len(predictions)
                 validation_accuracy += accuracy
-                i += 1
-                if i == 3:
-                    break
-        validation_loss = validation_loss / 3
-        validation_accuracy = validation_accuracy / 3
+        validation_loss = validation_loss / len(self.val_loader)
+        validation_accuracy = validation_accuracy / len(self.val_loader)
         return validation_loss, validation_accuracy
 
     def save_config(self):
@@ -163,7 +146,6 @@ class IdiomaticityTrainer:
         true = []
 
         with torch.no_grad():
-            i = 0
             for batch in self.test_loader:
                 input_ids, attention_mask, labels = batch
                 outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
@@ -171,9 +153,6 @@ class IdiomaticityTrainer:
                 predictions = torch.argmax(torch.softmax(logits, dim=1), dim=1)
                 predicted.extend(predictions.tolist())
                 true.extend(labels.tolist())
-                i += 1
-                if i == 3:
-                    break
         test_dict = {
             'predictions': predicted,
             'accuracy': accuracy_score(true, predicted),

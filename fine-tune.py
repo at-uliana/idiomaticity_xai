@@ -74,11 +74,6 @@ if __name__ == "__main__":
         args=config
     )
     print(f"Initialized trainer. Device: {trainer.device}")
-
-    print("All parameters on GPU:", are_all_model_parameters_on_gpu(model))
-    print("All buffers on GPU:", are_all_model_buffers_on_gpu(model))
-    print()
-
     trainer.fine_tune()
     print("Finished fine-tuning.")
     trainer.save_config()
