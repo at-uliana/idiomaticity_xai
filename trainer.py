@@ -29,16 +29,15 @@ class IdiomaticityTrainer:
     def train_batch(self, batch):
         self.model.train()
 
-        input_ids, attention_mask, labels = batch
-        input_ids, attention_mask, labels = batch
         print(f"Current device: {self.device}")
-        input_ids.to('cuda')
-        attention_mask.to('cuda')
-        labels.to('cuda')
+        input_ids, attention_mask, labels = batch
+        input_ids = input_ids.clone.detach.to('cuda')
+        attention_mask = attention_mask.to('cuda')
+        labels = labels.to('cuda')
         print("\tSent tensors to GPU.")
-        print("\tInput IDs on GPU:", input_ids.is_cuda)
-        print("\tAttention mask on GPU:", attention_mask.is_cuda)
-        print("\tLabels on GPU:", labels.is_cuda)
+        print("\tInput IDs on GPU:", input_ids.device)
+        print("\tAttention mask on GPU:", attention_mask.device)
+        print("\tLabels on GPU:", labels.device)
         print()
 
         # Zero out gradients
@@ -127,13 +126,13 @@ class IdiomaticityTrainer:
             for batch in self.val_loader:
                 print(f"Current device: {self.device}")
                 input_ids, attention_mask, labels = batch
-                input_ids.to('cuda')
-                attention_mask.to('cuda')
-                labels.to('cuda')
+                input_ids = input_ids.clone.detach.to('cuda')
+                attention_mask = attention_mask.to('cuda')
+                labels = labels.to('cuda')
                 print("\tSent tensors to GPU.")
-                print("\tInput IDs on GPU:", input_ids.is_cuda)
-                print("\tAttention mask on GPU:", attention_mask.is_cuda)
-                print("\tLabels on GPU:", labels.is_cuda)
+                print("\tInput IDs on GPU:", input_ids.device)
+                print("\tAttention mask on GPU:", attention_mask.device)
+                print("\tLabels on GPU:", labels.device)
                 print()
 
                 outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
