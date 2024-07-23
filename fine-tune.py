@@ -70,8 +70,6 @@ if __name__ == "__main__":
 
     trainer.fine_tune()
     trainer.save_config()
-    raise ValueError
-
 
 
 # args = read_command_line_for_fine_tuning()

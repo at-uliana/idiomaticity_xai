@@ -15,11 +15,11 @@ if __name__ == '__main__':
     parser.add_argument("--outdir", type=str, required=True)
     parser.add_argument("--n_splits", type=int, required=True)
     parser.add_argument("--seed", type=int, required=False, default=2025)
+    parser.add_argument("--generate_report", type=bool, required=False, default=False)
 
     # arguments valid only for `random` setting
     parser.add_argument("--test_size", type=int, required=False, default=5000)
     parser.add_argument("--dev_size", type=int, required=False, default=5000)
-
 
     args = parser.parse_args()
 
