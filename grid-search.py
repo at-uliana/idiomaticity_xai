@@ -2,7 +2,7 @@ import os
 import random
 import json
 import argparse
-from datetime import datetime
+from itertools import product
 import torch
 from torch.optim import AdamW
 from transformers import XLMRobertaTokenizer
@@ -34,6 +34,17 @@ if __name__ == "__main__":
     experiment_data = []
 
     split_n = config.start_split
+
+    # Enumerate combinations of hyperparameters
+    hyperparameters = list(product(config.learning_rates, config.batch_sizes))
+
+    print(f"The experiment includes fine-tuning {len(hyperparameters)} models with the following hyperparameters:")
+    for lr, bs in hyperparameters:
+        print(f"\t- learning rate: {lr}, batch size: {bs}")
+    exp_time = round((len(hyperparameters) * 46)/60, 1)
+    print()
+    print(f"Estimated time: {exp_time} hours.")
+
     for learning_rate in config.learning_rates:
         for batch_size in config.batch_sizes:
             print("-----------------------")
@@ -143,6 +154,14 @@ if __name__ == "__main__":
 
         # Save experiment data to `output_dir`
         out_data_path = os.path.join(config.output_dir, 'experiment data.json')
-        json.dump(experiment_data, open(out_data_path, 'w'), indent=True)
+        if os.path.exists(out_data_path):
+            print("Previous experiment detected.")
+            print("Added new data to the previous experiment.")
+            previous_experiment = json.load(open(out_data_path, 'r'))
+            for data in experiment_data:
+                previous_experiment.append(data)
+            json.dump(previous_experiment, open(out_data_path, 'w'), indent=True)
+        else:
+            json.dump(experiment_data, open(out_data_path, 'w'), indent=True)
         print(f"Experiment data saved to `{out_data_path}`")
         print("Done.")
