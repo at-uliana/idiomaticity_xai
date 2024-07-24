@@ -10,94 +10,139 @@ from data import IdiomDataset
 from utils import make_dir
 from torch.utils.data import DataLoader
 from classifier import IdiomaticityClassifier
-from utils import ExperimentConfig, train_test_dev_split
+from utils import GridSearchConfig, train_test_dev_split
 from trainer import IdiomaticityTrainer
 
 if __name__ == "__main__":
 
-    # add combinations of parameters
-    # add fine-tuning for each combination
-    EXP_DIR = "grid search results"
-    make_dir(EXP_DIR)
-    print("GRID SEARCH")
-    batch_sizes = [4, 8, 16, 32, 64]
-    for i, batch_size in enumerate(batch_sizes):
-        config = ExperimentConfig('grid_search_config.json')
-        config.batch_size = batch_size
+    print("=============")
+    print("    START")
+    print('=============\n')
 
-        # Create and set model name
-        model_name = f"lr=5e-5 batch={batch_size} setting=zero-shot"
-        config.model_name = model_name
-        print(f"Training model `{model_name}` for batch size of `{batch_size}`")
+    parser = argparse.ArgumentParser(description='Hyperparameter optimization')
+    parser.add_argument("--config_file", type=str, required=True)
+    args = parser.parse_args()
 
-        # Setting up output directory
-        model_dir = os.path.join(EXP_DIR, model_name)
-        make_dir(model_dir)
-        config.model_dir = model_dir
-        config.output_dir = model_dir
-        print(f"The model, the checkpoints and the config will be saved in the directory `{model_dir}`")
+    # Load configuration file
+    config = GridSearchConfig(args.config_file)
 
-        # Setting up split directory
-        split_name = f'split_{i}.tsv'
-        split_dir = config.split_dir + split_name
-        config.split_dir = split_dir
-        print(f"Loading split from {config.split_dir}")
+    # Prepare output directory
+    # to save experiment results
+    make_dir(config.output_dir)
 
-        # Setting up seed value
-        random.seed(config.seed)
-        torch.manual_seed(config.seed)
-        torch.cuda.manual_seed(config.seed)
-        torch.cuda.manual_seed_all(config.seed)
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
-        os.environ['PYTHONHASHSEED'] = str(config.seed)
-        print("Random seed set.")
+    # save experiments
+    experiment_data = []
 
-        # Setting up the device
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        print(f"Using device: {device}")
+    split_n = config.start_split
+    for learning_rate in config.learning_rates:
+        for batch_size in config.batch_sizes:
+            print("-----------------------")
+            print(f"Fine-tuning XLMRoberta")
+            print("Hyperparameters:")
+            print(f"\tlearning rate: {learning_rate}")
+            print(f"\tbatch size: {batch_size}")
+            print()
 
-        # Setting up model type and creating model instance
-        MODEL_TYPE = 'xlm-roberta-base'
-        model = IdiomaticityClassifier(config)
-        model.to(device)
-        print("Initialized the model.")
+            current_experiment_data = {
+                'learning rate': learning_rate,
+                'batch_size': batch_size,
+                'split': f"split_{split_n}"
+            }
 
-        # Setting up tokenizer
-        tokenizer = XLMRobertaTokenizer.from_pretrained(MODEL_TYPE)
-        print("Initialized the tokenizer.")
+            # Create and set model name based on the parameters
+            model_name = f"zero-shot split={split_n} lr={learning_rate} batch={batch_size}"
+            current_experiment_data['model name'] = model_name
+            print(f"Model name: \"{model_name}\"")
 
-        # Setting up optimizer
-        optimizer = AdamW(model.parameters(), lr=config.learning_rate)
-        print("Initialized the optimizer.")
+            # Create directory for the current model
+            # inside experiment directory (`config.output_dir`)
+            model_path = os.path.join(config.output_dir, model_name)
+            make_dir(model_path)
+            print(f"The model, the checkpoints and the results will be saved \n    in `{model_path}`")
+            print("-----------------------\n")
 
-        # Loading data
-        train, dev, test = train_test_dev_split(config.data_dir, config.split_dir)
+            # Setting up seed value
+            print("Setting up seed value... ", end="")
+            random.seed(config.seed)
+            torch.manual_seed(config.seed)
+            torch.cuda.manual_seed(config.seed)
+            torch.cuda.manual_seed_all(config.seed)
+            torch.backends.cudnn.deterministic = True
+            torch.backends.cudnn.benchmark = False
+            os.environ['PYTHONHASHSEED'] = str(config.seed)
+            print("Done")
 
-        train_set = IdiomDataset(train, tokenizer=tokenizer, max_length=config.max_length)
-        test_set = IdiomDataset(test, tokenizer=tokenizer, max_length=config.max_length)
-        dev_set = IdiomDataset(dev, tokenizer=tokenizer, max_length=config.max_length)
+            # Setting up the device
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            print(f"Fine-tuning on device: {device}")
 
-        train_loader = DataLoader(train_set, batch_size=config.batch_size, shuffle=True)
-        test_loader = DataLoader(test_set, batch_size=config.batch_size, shuffle=True)
-        dev_loader = DataLoader(dev_set, batch_size=config.batch_size, shuffle=True)
-        print("Loaded data.")
+            # Setting up model type and creating model instance
+            print("Initializing the model...", end="")
+            MODEL_TYPE = 'xlm-roberta-base'
+            model = IdiomaticityClassifier(MODEL_TYPE)
+            model.to(device)
+            current_experiment_data['pretrained model'] = MODEL_TYPE
+            print("Done.")
 
-        trainer = IdiomaticityTrainer(
-            model=model,
-            optimizer=optimizer,
-            device=device,
-            train_loader=train_loader,
-            test_loader=test_loader,
-            val_loader=dev_loader,
-            args=config
-        )
-        print(f"Initialized training loop.")
-        print()
-        trainer.fine_tune()
-        trainer.save_config()
-        print()
-        print("Finished fine-tuning.")
-        print("Saved configs.")
+            # Setting up tokenizer
+            print("Initializing the tokenizer... ", end="")
+            tokenizer = XLMRobertaTokenizer.from_pretrained(MODEL_TYPE)
+            print("Done.")
 
+            # Setting up optimizer
+            print("Initializing the optimizer... ", end="")
+            optimizer = AdamW(model.parameters(), lr=learning_rate)
+            print("Done.")
 
+            # Loading data
+            split_path = os.path.join(config.split_dir, f"split_{split_n}.tsv")
+            train, dev, test = train_test_dev_split(config.data_dir, split_path)
+
+            print(f"Loading data from {config.data_dir}.")
+            print(f"Loading data from {split_path}.")
+
+            train_set = IdiomDataset(train, tokenizer=tokenizer, max_length=config.max_length)
+            test_set = IdiomDataset(test, tokenizer=tokenizer, max_length=config.max_length)
+            dev_set = IdiomDataset(dev, tokenizer=tokenizer, max_length=config.max_length)
+
+            train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
+            test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=True)
+            dev_loader = DataLoader(dev_set, batch_size=batch_size, shuffle=True)
+            print("Done.")
+
+            current_experiment_data['# train batches'] = len(train_loader)
+            current_experiment_data['# test batches'] = len(test_loader)
+            current_experiment_data['# dev batches'] = len(dev_loader)
+
+            trainer = IdiomaticityTrainer(
+                model=model,
+                optimizer=optimizer,
+                device=device,
+                train_loader=train_loader,
+                test_loader=test_loader,
+                val_loader=dev_loader,
+                n_epochs=config.n_epochs,
+                model_name=model_name,
+                save_checkpoints=config.save_checkpoints,
+                output_dir=model_path
+            )
+            print(f"\nInitializing training loop.\n")
+            trainer.fine_tune()
+            print("Done.")
+            trainer.save_config()
+            print("Config file saved.")
+
+            current_experiment_data['validation loss'] = trainer.validation_loss
+            current_experiment_data['validation accuracy'] = trainer.validation_accuracy
+
+            experiment_data.append(current_experiment_data)
+            print()
+
+            # Use the next split for the next experiment
+            split_n += 1
+
+        # Save experiment data to `output_dir`
+        out_data_path = os.path.join(config.output_dir, 'experiment data.json')
+        json.dump(experiment_data, open(out_data_path, 'w'), indent=True)
+        print(f"Experiment data saved to `{out_data_path}`")
+        print("Done.")

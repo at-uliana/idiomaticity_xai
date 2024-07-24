@@ -4,17 +4,17 @@ from torch import nn, optim
 
 class IdiomaticityClassifier(nn.Module):
 
-    def __init__(self, configs):
+    def __init__(self, model_type, freeze=False):
         super(IdiomaticityClassifier, self).__init__()
-        self.transformer = XLMRobertaForSequenceClassification.from_pretrained('xlm-roberta-base',
+        self.model_type = model_type
+        self.transformer = XLMRobertaForSequenceClassification.from_pretrained(model_type,
                                                                                num_labels=2,
                                                                                output_hidden_states=False,
                                                                                output_attentions=False
                                                                                )
-        self.batch_size = configs.batch_size
-
+        self.freeze = freeze
         # Fine-tune the model or not while learning the classifier
-        if configs.freeze:
+        if freeze:
             self.freeze_pretrained()
         else:
             self.unfreeze_pretrained()
