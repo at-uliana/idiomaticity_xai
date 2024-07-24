@@ -64,6 +64,7 @@ class IdiomaticityTrainer:
         print("\nFine-tuning")
         for epoch in range(self.args.n_epochs):
             print(f" - Epoch {epoch + 1} out of {self.args.n_epochs}")
+
             for batch in self.train_loader:
                 _ = self.train_batch(batch)
 
@@ -78,7 +79,7 @@ class IdiomaticityTrainer:
 
             # Save model after each epoch if save_checkpoints=True:
             if self.args.save_checkpoints:
-                path = os.path.join(self.args.model_dir, self.args.model_name + f" e{epoch}.pt")
+                path = os.path.join(self.args.model_dir, self.args.model_name + f" epoch={epoch}.pt")
                 print(f"\tSaving checkpoint to {path}.")
                 self.save_model(path)
             else:
@@ -111,7 +112,6 @@ class IdiomaticityTrainer:
                 predictions = torch.argmax(torch.softmax(logits, dim=1), dim=1)
                 accuracy = (predictions == labels).sum().item() / len(predictions)
                 validation_accuracy += accuracy
-                break
 
         validation_loss = validation_loss / len(self.val_loader)
         validation_accuracy = validation_accuracy / len(self.val_loader)
