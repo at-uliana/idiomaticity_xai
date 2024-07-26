@@ -9,3 +9,5 @@ To run grid-search:
 ```commandline
 python grid-search.py --config_file grid_search_config.json
 ```
+
+See `configs` for sample config file.
