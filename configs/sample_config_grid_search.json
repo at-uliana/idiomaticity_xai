@@ -8,6 +8,6 @@
   "split dir": "path/to/data/split",
   "output dir": "grid_search",
   "start split": 0,
-  "freeze": [1,2,3,4],
+  "freeze": [0,1,2,3],
   "save checkpoints": true
 }
