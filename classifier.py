@@ -4,7 +4,7 @@ from torch import nn, optim
 
 class IdiomaticityClassifier(nn.Module):
 
-    def __init__(self, model_type, freeze=False):
+    def __init__(self, model_type, freeze=None):
         super(IdiomaticityClassifier, self).__init__()
         self.model_type = model_type
         self.transformer = XLMRobertaForSequenceClassification.from_pretrained(model_type,
@@ -13,21 +13,19 @@ class IdiomaticityClassifier(nn.Module):
                                                                                output_attentions=False
                                                                                )
         self.freeze = freeze
-        # Fine-tune the model or not while learning the classifier
-        if freeze:
-            self.freeze_pretrained()
-        else:
-            self.unfreeze_pretrained()
 
-    def freeze_pretrained(self):
-        # doesn't work
-        for param in self.transformer.named_parameters():
-            param[1].requires_grad = False
+        # Freeze layers if required
+        if freeze is not None:
+            self.freeze_layers(freeze)
 
-    def unfreeze_pretrained(self):
-        # doesn't work
-        for param in self.transformer.named_parameters():
-            param[1].requires_grad = True
+    def freeze_layers(self, layers):
+        for layer in layers:
+            for param in self.transformer.roberta.encoder.layer[layer].parameters():
+                param.requires_grad = False
+        # Print to verify which layers are frozen
+        for i, layer in enumerate(self.transformer.roberta.encoder.layer):
+            is_frozen = not any(param.requires_grad for param in layer.parameters())
+            print(f"Layer {i} is {'frozen' if is_frozen else 'trainable'}")
 
     def forward(self, input_ids, attention_mask, labels):
         outputs = self.transformer(input_ids=input_ids, attention_mask=attention_mask, labels=labels)

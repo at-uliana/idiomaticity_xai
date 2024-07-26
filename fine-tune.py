@@ -21,7 +21,7 @@ if __name__ == "__main__":
     config = ExperimentConfig(args.config_file)
 
     # Prepare output directory
-    make_dir(config.model_dir)
+    make_dir(config.output_dir)
 
     # Setting up seed value
     random.seed(config.seed)
@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
     # Setting up model type and creating model instance
     MODEL_TYPE = 'xlm-roberta-base'
-    model = IdiomaticityClassifier(config)
+    model = IdiomaticityClassifier(model_type=MODEL_TYPE, freeze=config.freeze)
     model.to(device)
     print("Initialized the model.")
 
@@ -52,7 +52,7 @@ if __name__ == "__main__":
     print("Initialized the optimizer.")
 
     # Loading data
-    train, dev, test = train_test_dev_split(config.data_dir, config.split_dir)
+    train, dev, test = train_test_dev_split(config.data_dir, config.split_file)
 
     train_set = IdiomDataset(train, tokenizer=tokenizer, max_length=config.max_length)
     test_set = IdiomDataset(test, tokenizer=tokenizer, max_length=config.max_length)
@@ -70,8 +70,12 @@ if __name__ == "__main__":
         train_loader=train_loader,
         test_loader=test_loader,
         val_loader=dev_loader,
-        args=config
+        n_epochs=config.n_epochs,
+        model_name=config.model_name,
+        save_checkpoints=config.save_checkpoints,
+        output_dir=config.output_dir
     )
+
     print(f"Initialized training loop.")
     print()
     trainer.fine_tune()

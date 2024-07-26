@@ -90,7 +90,7 @@ if __name__ == "__main__":
             # Setting up model type and creating model instance
             print("Initializing the model...", end="")
             MODEL_TYPE = 'xlm-roberta-base'
-            model = IdiomaticityClassifier(MODEL_TYPE)
+            model = IdiomaticityClassifier(model_type=MODEL_TYPE, freeze=config.freeze)
             model.to(device)
             current_experiment_data['pretrained model'] = MODEL_TYPE
             print("Done.")
@@ -135,8 +135,7 @@ if __name__ == "__main__":
                 n_epochs=config.n_epochs,
                 model_name=model_name,
                 save_checkpoints=config.save_checkpoints,
-                output_dir=model_path
-            )
+                output_dir=model_path            )
             print(f"\nInitializing training loop.\n")
             trainer.fine_tune()
             print("Done.")
@@ -153,7 +152,7 @@ if __name__ == "__main__":
             split_n += 1
 
         # Save experiment data to `output_dir`
-        out_data_path = os.path.join(config.output_dir, 'experiment data.json')
+        out_data_path = os.path.join(config.output_dir, 'experiment_data.json')
         if os.path.exists(out_data_path):
             print("Previous experiment detected.")
             print("Added new data to the previous experiment.")
