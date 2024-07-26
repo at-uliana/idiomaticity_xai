@@ -16,6 +16,7 @@ class IdiomaticityClassifier(nn.Module):
 
         # Freeze layers if required
         if freeze is not None:
+            print(f"The following layers will be frozen during fine-tuning: {', '.join(self.freeze)}.")
             self.freeze_layers(freeze)
 
     def freeze_layers(self, layers):

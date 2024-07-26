@@ -135,7 +135,8 @@ if __name__ == "__main__":
                 n_epochs=config.n_epochs,
                 model_name=model_name,
                 save_checkpoints=config.save_checkpoints,
-                output_dir=model_path            )
+                output_dir=model_path)
+
             print(f"\nInitializing training loop.\n")
             trainer.fine_tune()
             print("Done.")
