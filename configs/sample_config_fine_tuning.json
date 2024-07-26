@@ -1,0 +1,13 @@
+{
+  "seed": 2025,
+  "learning rate": 5e-5,
+  "batch size": 16,
+  "max length": 128,
+  "n epochs": 3,
+  "data dir": "path/to/data.tsv",
+  "split file": "path/to/split/file.tsv",
+  "model name": "lr=5e-5 b=16 split=zeroshot",
+  "output dir": "checkpoints",
+  "freeze": [0,1,2,3,4,5,6,7],
+  "save checkpoints": true
+}
