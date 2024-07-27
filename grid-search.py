@@ -39,9 +39,25 @@ if __name__ == "__main__":
     print(f"The experiment includes fine-tuning {len(hyperparameters)} models with the following hyperparameters:")
     for lr, bs in hyperparameters:
         print(f"\t- learning rate: {lr}, batch size: {bs}")
-    exp_time = round((len(hyperparameters) * 46)/60, 1)
+    exp_time = round((len(hyperparameters) * 25)/60, 1)
     print()
     print(f"Estimated time: {exp_time} hours.")
+
+    # Set up model type
+    MODEL_TYPE = 'xlm-roberta-base'
+
+    # Setting up tokenizer
+    print("Initializing the tokenizer... ", end="")
+    tokenizer = XLMRobertaTokenizer.from_pretrained(MODEL_TYPE)
+    print("Done.")
+
+    # Loading data
+    print(f"Loading data from {config.data_file}.")
+    print(f"Loading train-dev-test split from {config.split_file}.")
+    train, dev, test = train_test_dev_split(config.data_file, config.split_file)
+    train_set = IdiomDataset(train, tokenizer=tokenizer, max_length=config.max_length)
+    test_set = IdiomDataset(test, tokenizer=tokenizer, max_length=config.max_length)
+    dev_set = IdiomDataset(dev, tokenizer=tokenizer, max_length=config.max_length)
 
     for learning_rate in config.learning_rates:
         for batch_size in config.batch_sizes:
@@ -59,7 +75,7 @@ if __name__ == "__main__":
             }
 
             # Create and set model name based on the parameters
-            model_name = f"zero-shot lr={learning_rate} batch={batch_size}"
+            model_name = f"zero-shot lr={learning_rate} b={batch_size}"
             current_experiment_data['model name'] = model_name
             print(f"Model name: \"{model_name}\"")
 
@@ -87,15 +103,9 @@ if __name__ == "__main__":
 
             # Setting up model type and creating model instance
             print("Initializing the model...", end="")
-            MODEL_TYPE = 'xlm-roberta-base'
             model = IdiomaticityClassifier(model_type=MODEL_TYPE, freeze=config.freeze)
             model.to(device)
             current_experiment_data['pretrained model'] = MODEL_TYPE
-            print("Done.")
-
-            # Setting up tokenizer
-            print("Initializing the tokenizer... ", end="")
-            tokenizer = XLMRobertaTokenizer.from_pretrained(MODEL_TYPE)
             print("Done.")
 
             # Setting up optimizer
@@ -103,16 +113,7 @@ if __name__ == "__main__":
             optimizer = AdamW(model.parameters(), lr=learning_rate)
             print("Done.")
 
-            # Loading data
-            train, dev, test = train_test_dev_split(config.data_file, config.split_file)
-
-            print(f"Loading data from {config.data_file}.")
-            print(f"Loading data from {config.data_file}.")
-
-            train_set = IdiomDataset(train, tokenizer=tokenizer, max_length=config.max_length)
-            test_set = IdiomDataset(test, tokenizer=tokenizer, max_length=config.max_length)
-            dev_set = IdiomDataset(dev, tokenizer=tokenizer, max_length=config.max_length)
-
+            #
             train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
             test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=True)
             dev_loader = DataLoader(dev_set, batch_size=batch_size, shuffle=True)

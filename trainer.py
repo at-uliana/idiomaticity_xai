@@ -106,6 +106,7 @@ class IdiomaticityTrainer:
         validation_accuracy = 0.0
 
         with torch.no_grad():
+
             for batch in self.val_loader:
 
                 # Extract batch and send to GPU
