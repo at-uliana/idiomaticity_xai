@@ -20,7 +20,7 @@ if __name__ == "__main__":
     print('=============\n')
 
     parser = argparse.ArgumentParser(description='Hyperparameter optimization')
-    parser.add_argument("--config_file", type=str, required=True)
+    parser.add_argument("-c", "--config_file", type=str, required=True)
     args = parser.parse_args()
 
     # Load configuration file
@@ -32,8 +32,6 @@ if __name__ == "__main__":
 
     # save experiments
     experiment_data = []
-
-    split_n = config.start_split
 
     # Enumerate combinations of hyperparameters
     hyperparameters = list(product(config.learning_rates, config.batch_sizes))
@@ -57,11 +55,11 @@ if __name__ == "__main__":
             current_experiment_data = {
                 'learning rate': learning_rate,
                 'batch_size': batch_size,
-                'split': f"split_{split_n}"
+                'split': os.path.basename(config.split_file)
             }
 
             # Create and set model name based on the parameters
-            model_name = f"zero-shot split={split_n} lr={learning_rate} batch={batch_size}"
+            model_name = f"zero-shot lr={learning_rate} batch={batch_size}"
             current_experiment_data['model name'] = model_name
             print(f"Model name: \"{model_name}\"")
 
@@ -106,11 +104,10 @@ if __name__ == "__main__":
             print("Done.")
 
             # Loading data
-            split_path = os.path.join(config.split_dir, f"split_{split_n}.tsv")
-            train, dev, test = train_test_dev_split(config.data_dir, split_path)
+            train, dev, test = train_test_dev_split(config.data_file, config.split_file)
 
-            print(f"Loading data from {config.data_dir}.")
-            print(f"Loading data from {split_path}.")
+            print(f"Loading data from {config.data_file}.")
+            print(f"Loading data from {config.data_file}.")
 
             train_set = IdiomDataset(train, tokenizer=tokenizer, max_length=config.max_length)
             test_set = IdiomDataset(test, tokenizer=tokenizer, max_length=config.max_length)
@@ -135,7 +132,8 @@ if __name__ == "__main__":
                 n_epochs=config.n_epochs,
                 model_name=model_name,
                 save_checkpoints=config.save_checkpoints,
-                output_dir=model_path)
+                output_dir=model_path
+            )
 
             print(f"\nInitializing training loop.\n")
             trainer.fine_tune()
@@ -148,9 +146,6 @@ if __name__ == "__main__":
 
             experiment_data.append(current_experiment_data)
             print()
-
-            # Use the next split for the next experiment
-            split_n += 1
 
         # Save experiment data to `output_dir`
         out_data_path = os.path.join(config.output_dir, 'experiment_data.json')

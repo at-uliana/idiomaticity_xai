@@ -14,7 +14,7 @@ from trainer import IdiomaticityTrainer
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Fine-tuning XLM-Roberta for idiomaticity detection')
-    parser.add_argument("--config_file", type=str, required=True)
+    parser.add_argument("-c", "--config_file", type=str, required=True)
     args = parser.parse_args()
 
     # Load configuration file
@@ -52,7 +52,7 @@ if __name__ == "__main__":
     print("Initialized the optimizer.")
 
     # Loading data
-    train, dev, test = train_test_dev_split(config.data_dir, config.split_file)
+    train, dev, test = train_test_dev_split(config.data_file, config.split_file)
 
     train_set = IdiomDataset(train, tokenizer=tokenizer, max_length=config.max_length)
     test_set = IdiomDataset(test, tokenizer=tokenizer, max_length=config.max_length)

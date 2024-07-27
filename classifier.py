@@ -1,5 +1,5 @@
 from transformers import XLMRobertaForSequenceClassification
-from torch import nn, optim
+from torch import nn
 
 
 class IdiomaticityClassifier(nn.Module):
