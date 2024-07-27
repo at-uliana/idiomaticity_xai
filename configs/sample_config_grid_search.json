@@ -1,13 +1,12 @@
 {
   "seed": 2025,
   "learning rates": [1e-5, 2e-5, 3e-5, 4e-5, 5e-5],
-  "batch sizes": [4, 8, 16, 32, 64],
-  "max length": 128,
+  "batch sizes": [8, 16, 32, 64],
+  "max length": 256,
   "n epochs": 5,
-  "data dir": "path/to/file.tsv",
-  "split dir": "path/to/data/split",
+  "data file": "path/to/file.tsv",
+  "split file": "path/to/data/split.tsv",
   "output dir": "grid_search",
-  "start split": 0,
   "freeze": [0,1,2,3],
   "save checkpoints": true
 }
