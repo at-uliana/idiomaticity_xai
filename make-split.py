@@ -38,7 +38,7 @@ if __name__ == '__main__':
     print(f"Data size: {len(data)}")
 
     # Perform splitting for zero-shot setting
-    if args.setting == 'zero-shot':
+    if args.setting == 'zero-shot' or args.setting == 'zeroshot':
         train_size_total = 0
         test_size_total = 0
         dev_size_total = 0
@@ -47,14 +47,14 @@ if __name__ == '__main__':
             data['split'] = 'train'
 
             # Select 200 idioms for testing
-            idioms_test = np.random.choice(idioms, size=250, replace=False)
+            idioms_test = np.random.choice(idioms, size=215, replace=False)
 
             # Move all sentences with the selected idioms to the test set
             data.loc[data['idiom'].isin(idioms_test), 'split'] = 'test'
 
             # Select 100 idioms for validation (disjoint from the test set)
             idioms_train = data.loc[data['split'] == 'train', 'idiom'].unique()
-            idioms_dev = np.random.choice(idioms_train, size=250, replace=False)
+            idioms_dev = np.random.choice(idioms_train, size=215, replace=False)
 
             # Move all sentences with the selected idioms to the dev set
             data.loc[data['idiom'].isin(idioms_dev), 'split'] = 'dev'
@@ -77,9 +77,9 @@ if __name__ == '__main__':
             test_size_total += test_size
             dev_size_total += dev_size
         print("-------------------------")
-        print(f"Average train size: {round(train_size_total / 10)}")
-        print(f"Average test size: {round(test_size_total / 10)}")
-        print(f"Average dev size: {round(dev_size_total / 10)}")
+        print(f"Average train size: {round(train_size_total / args.n_splits)}")
+        print(f"Average test size: {round(test_size_total / args.n_splits)}")
+        print(f"Average dev size: {round(dev_size_total / args.n_splits)}")
 
     elif args.setting == 'one-shot':
         train_size_total = 0

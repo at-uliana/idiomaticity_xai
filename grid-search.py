@@ -58,6 +58,7 @@ if __name__ == "__main__":
     train_set = IdiomDataset(train, tokenizer=tokenizer, max_length=config.max_length)
     test_set = IdiomDataset(test, tokenizer=tokenizer, max_length=config.max_length)
     dev_set = IdiomDataset(dev, tokenizer=tokenizer, max_length=config.max_length)
+    print("Data loaded.")
 
     for learning_rate in config.learning_rates:
         for batch_size in config.batch_sizes:
@@ -70,7 +71,7 @@ if __name__ == "__main__":
 
             current_experiment_data = {
                 'learning rate': learning_rate,
-                'batch_size': batch_size,
+                'batch size': batch_size,
                 'split': os.path.basename(config.split_file)
             }
 
@@ -148,16 +149,16 @@ if __name__ == "__main__":
             experiment_data.append(current_experiment_data)
             print()
 
-        # Save experiment data to `output_dir`
-        out_data_path = os.path.join(config.output_dir, 'experiment_data.json')
-        if os.path.exists(out_data_path):
-            print("Previous experiment detected.")
-            print("Added new data to the previous experiment.")
-            previous_experiment = json.load(open(out_data_path, 'r'))
-            for data in experiment_data:
-                previous_experiment.append(data)
-            json.dump(previous_experiment, open(out_data_path, 'w'), indent=True)
-        else:
-            json.dump(experiment_data, open(out_data_path, 'w'), indent=True)
-        print(f"Experiment data saved to `{out_data_path}`")
-        print("Done.")
+    # Save experiment data to `output_dir`
+    out_data_path = os.path.join(config.output_dir, 'experiment_data.json')
+    if os.path.exists(out_data_path):
+        print("Previous experiment detected.")
+        print("Added new data to the previous experiment.")
+        previous_experiment = json.load(open(out_data_path, 'r'))
+        for data in experiment_data:
+            previous_experiment.append(data)
+        json.dump(previous_experiment, open(out_data_path, 'w'), indent=True)
+    else:
+        json.dump(experiment_data, open(out_data_path, 'w'), indent=True)
+    print(f"Experiment data saved to `{out_data_path}`")
+    print("Done.")
