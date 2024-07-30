@@ -2,7 +2,6 @@ import torch
 import json
 import os
 from datetime import datetime
-from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from utils import are_all_model_parameters_on_gpu, are_all_model_buffers_on_gpu
 
 
@@ -143,64 +142,3 @@ class IdiomaticityTrainer:
         path = os.path.join(self.output_dir, "output.json")
         json.dump(output, open(path, 'w'), indent=True)
 
-    # def test_model(self):
-    #     self.model.eval()
-    #     test_accuracy = 0.0
-    #     test_loss = 0.0
-    #     predicted = []
-    #     true = []
-    #
-    #     with torch.no_grad():
-    #         for batch in self.test_loader:
-    #             input_ids, attention_mask, labels = batch
-    #             outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
-    #             loss, logits = outputs.loss, outputs.logits
-    #             predictions = torch.argmax(torch.softmax(logits, dim=1), dim=1)
-    #             predicted.extend(predictions.tolist())
-    #             true.extend(labels.tolist())
-    #     test_dict = {
-    #         'predictions': predicted,
-    #         'accuracy': accuracy_score(true, predicted),
-    #         'f1-score': f1_score(true, predicted),
-    #         'precision': precision_score(true, predicted),
-    #         'recall': recall_score(true, predicted)
-    #     }
-    #     self.results['test'] = test_dict
-    #     return test_dict
-    #
-    # def get_predictions(self, external_dataloader=None):
-    #     if external_dataloader:
-    #         test_loader = external_dataloader
-    #     else:
-    #         test_loader = self.test_loader
-    #
-    #     self.model.eval()
-    #     predictions = []
-    #     prediction_probs = []
-    #     true_labels = []
-    #
-    #     with torch.no_grad():
-    #         i = 0
-    #         for batch in test_loader:
-    #             input_ids, attention_mask, labels = batch
-    #             outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
-    #             loss, logits = outputs.loss, outputs.logits
-    #
-    #             # Save `true` labels
-    #             true_labels.extend(labels)
-    #
-    #             # Get probabilities
-    #             probs = torch.softmax(logits, dim=1)
-    #             prediction_probs.extend(probs)
-    #
-    #             # Get predictions
-    #             preds = torch.argmax(probs, dim=1)
-    #             predictions.extend(preds)
-    #             i += 1
-    #             if i == 10:
-    #                 break
-    #
-    #         predictions = torch.stack(predictions)
-    #         prediction_probs = torch.stack(prediction_probs)
-    #         true_labels = torch.stack(true_labels)
-    #         return predictions, prediction_probs, true_labels
