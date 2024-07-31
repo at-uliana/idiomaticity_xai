@@ -29,6 +29,7 @@ class IdiomaticityTrainer:
         self.validation_loss = []
         self.validation_accuracy = []
         self.best_model = None
+        self.best_epoch = None
 
     def train_batch(self, batch):
         self.model.train()
@@ -101,6 +102,7 @@ class IdiomaticityTrainer:
                 path = os.path.join(self.output_dir, name)
                 self.save_model(path)
                 self.best_model = name
+                self.best_epoch = epoch
                 print()
 
                 # # Save the model

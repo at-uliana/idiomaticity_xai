@@ -108,7 +108,7 @@ if __name__ == "__main__":
         test_results['model checkpoint'] = trainer.best_model
 
         # Save results
-        results_path = os.path.join(config.output_dir, 'test results.json')
+        results_path = os.path.join(model_dir, 'test results.json')
         json.dump(test_results, open(results_path, 'w'), indent=True)
         print(f"Test results saved to {results_path}")
 

@@ -129,11 +129,9 @@ if __name__ == "__main__":
                 optimizer=optimizer,
                 device=device,
                 train_loader=train_loader,
-                test_loader=test_loader,
                 val_loader=dev_loader,
                 n_epochs=config.n_epochs,
                 model_name=model_name,
-                save_checkpoints=config.save_checkpoints,
                 output_dir=model_path
             )
 

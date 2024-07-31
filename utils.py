@@ -20,6 +20,18 @@ def make_dir(dir):
         os.makedirs(dir)
 
 
+def save_experiment_data(experiment_data, outdir):
+    if os.path.exists(outdir):
+        print("Previous experiment detected.")
+        print("Added new data to the previous experiment.")
+        previous_experiment = json.load(open(outdir, 'r'))
+        for data in experiment_data:
+            previous_experiment.append(data)
+        json.dump(previous_experiment, open(outdir, 'w'), indent=True)
+    else:
+        json.dump(experiment_data, open(outdir, 'w'), indent=True)
+
+
 class ExperimentConfig:
     # Temporary class to store configurations
     # (to be replaced with `sacred` library or similar)
@@ -38,6 +50,26 @@ class ExperimentConfig:
         self.save_checkpoints = config['save checkpoints']
         # for key, value in config.items():
         #     setattr(self, key.replace(" ", "_"), value)
+
+
+class FineTuneMultipleConfig:
+    # Temporary class to store configurations
+    # (to be replaced with `sacred` library or similar)
+    def __init__(self, config_file):
+        config = json.load(open(config_file, 'r'))
+        self.seed = config['seed']
+        self.n_models = config['n models']
+        self.learning_rate = config['learning rate']
+        self.batch_size = config['batch size']
+        self.max_length = config['max length']
+        self.n_epochs = config['n epochs']
+        self.data_file = config['data file']
+        self.split_dir = config['split dir']
+        self.start_split = config['start split']
+        self.output_dir = config['output dir']
+        self.freeze = config['freeze']
+        self.setting = config['setting']
+        self.setting = config['setting']
 
 
 class GridSearchConfig:
