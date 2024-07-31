@@ -2,6 +2,7 @@ import torch
 import json
 import os
 from datetime import datetime
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from utils import are_all_model_parameters_on_gpu, are_all_model_buffers_on_gpu
 
 
@@ -12,16 +13,14 @@ def make_model_name():
 
 class IdiomaticityTrainer:
 
-    def __init__(self, model, optimizer, device, train_loader, val_loader, test_loader, n_epochs,
-                 save_checkpoints=False, model_name=None, output_dir='checkpoints'):
+    def __init__(self, model, optimizer, device, n_epochs, train_loader, val_loader,
+                 model_name=None, output_dir='checkpoints'):
         self.model = model
         self.train_loader = train_loader
         self.val_loader = val_loader
-        self.test_loader = test_loader
         self.optimizer = optimizer
         self.device = device
         self.n_epochs = n_epochs
-        self.save_checkpoints = save_checkpoints
         self.output_dir = output_dir
         if model_name is None:
             self.model_name = make_model_name()
@@ -29,6 +28,8 @@ class IdiomaticityTrainer:
             self.model_name = model_name
         self.validation_loss = []
         self.validation_accuracy = []
+        self.best_model = None
+
 
     def train_batch(self, batch):
         self.model.train()
@@ -75,29 +76,53 @@ class IdiomaticityTrainer:
         for epoch in range(self.n_epochs):
             print(f" - Epoch {epoch + 1} out of {self.n_epochs}")
 
+            i = 0
             for batch in self.train_loader:
                 _ = self.train_batch(batch)
+                i += 1
+                if i == 3:
+                    break
 
             # Calculate validation loss and accuracy
             val_loss, val_acc = self.evaluate_model()
             print(f"\tValidation loss: {val_loss:.3f}")
             print(f"\tValidation accuracy: {val_acc:.3f}")
 
-            # Save validation loss and accuracy
+            if epoch == 0:
+                val_loss = val_loss - 1
+            # if epoch == 1:
+            #     val_loss = val_loss - 2
+
+            # Extract the validation loss of the previous epoch
+            previous_loss = self.validation_loss[-1]
+
+            # add validation loss and accuracy
             self.validation_loss.append(val_loss)
             self.validation_accuracy.append(val_acc)
 
-            # Save the model
-            if self.save_checkpoints:
-                # Save model after each checkpoint
-                path = os.path.join(self.output_dir, self.model_name + f" epoch={epoch}.pt")
-                self.save_model(path)
+            # Stop training if validation loss is going up
+            if val_loss > previous_loss:
+                print("Early stopping. The checkpoint will not be saved.")
+                break
             else:
-                # Save only if it's the last epoch
-                if epoch == self.n_epochs - 1:
-                    path = os.path.join(self.output_dir, self.model_name + ".pt")
-                    self.save_model(path)
-            print()
+                # Save the model
+                print("Saving the checkpoint.")
+                name = self.model_name + f" epoch={epoch}.pt"
+                path = os.path.join(self.output_dir, name)
+                self.save_model(path)
+                self.best_model = name
+                print()
+
+                # # Save the model
+                # if self.save_checkpoints:
+                #     # Save model after each checkpoint
+                #     path = os.path.join(self.output_dir, self.model_name + f" epoch={epoch}.pt")
+                #     self.save_model(path)
+                # else:
+                #     # Save only if it's the last epoch
+                #     if epoch == self.n_epochs - 1:
+                #         path = os.path.join(self.output_dir, self.model_name + ".pt")
+                #         self.save_model(path)
 
     def evaluate_model(self):
         self.model.eval()
@@ -106,6 +131,7 @@ class IdiomaticityTrainer:
 
         with torch.no_grad():
 
+            i = 0
             for batch in self.val_loader:
 
                 # Extract batch and send to GPU
@@ -121,6 +147,9 @@ class IdiomaticityTrainer:
                 predictions = torch.argmax(torch.softmax(logits, dim=1), dim=1)
                 accuracy = (predictions == labels).sum().item() / len(predictions)
                 validation_accuracy += accuracy
+                i += 1
+                if i == 3:
+                    break
 
         validation_loss = validation_loss / len(self.val_loader)
         validation_accuracy = validation_accuracy / len(self.val_loader)
@@ -136,7 +165,7 @@ class IdiomaticityTrainer:
             'validation accuracy': self.validation_accuracy,
             'epochs': self.n_epochs,
             'model name': self.model_name,
-
+            'best model': self.best_model
         }
 
         path = os.path.join(self.output_dir, "output.json")

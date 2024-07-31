@@ -1,4 +1,5 @@
 import os
+import json
 import random
 import argparse
 import torch
@@ -10,6 +11,7 @@ from torch.utils.data import DataLoader
 from classifier import IdiomaticityClassifier
 from utils import ExperimentConfig, train_test_dev_split
 from trainer import IdiomaticityTrainer
+from tester import IdiomaticityTester
 
 
 if __name__ == "__main__":
@@ -55,12 +57,12 @@ if __name__ == "__main__":
     train, dev, test = train_test_dev_split(config.data_file, config.split_file)
 
     train_set = IdiomDataset(train, tokenizer=tokenizer, max_length=config.max_length)
-    test_set = IdiomDataset(test, tokenizer=tokenizer, max_length=config.max_length)
     dev_set = IdiomDataset(dev, tokenizer=tokenizer, max_length=config.max_length)
+    test_set = IdiomDataset(test, tokenizer=tokenizer, max_length=config.max_length)
 
     train_loader = DataLoader(train_set, batch_size=config.batch_size, shuffle=True)
-    test_loader = DataLoader(test_set, batch_size=config.batch_size, shuffle=True)
     dev_loader = DataLoader(dev_set, batch_size=config.batch_size, shuffle=True)
+    test_loader = DataLoader(test_set, batch_size=config.batch_size, shuffle=False)
     print("Loaded data.")
 
     trainer = IdiomaticityTrainer(
@@ -68,11 +70,9 @@ if __name__ == "__main__":
         optimizer=optimizer,
         device=device,
         train_loader=train_loader,
-        test_loader=test_loader,
         val_loader=dev_loader,
         n_epochs=config.n_epochs,
         model_name=config.model_name,
-        save_checkpoints=config.save_checkpoints,
         output_dir=config.output_dir
     )
 
@@ -80,6 +80,35 @@ if __name__ == "__main__":
     print()
     trainer.fine_tune()
     trainer.save_config()
-    print()
     print("Finished fine-tuning.")
     print("Saved configs.")
+
+    if trainer.best_model is not None:
+        print(f"Testing the model from checkpoint: `{trainer.best_model}`")
+        checkpoint = os.path.join(config.output_dir, trainer.best_model)
+
+        # Setting up model type and creating model instance
+        model = IdiomaticityClassifier(model_type=MODEL_TYPE, freeze=config.freeze)
+        model.load_state_dict(torch.load(checkpoint))
+        model.to(device)
+        print("Initialized the model.")
+
+        # Setting up tester
+        tester = IdiomaticityTester(
+            model=model,
+            device=device,
+            test_loader=test_loader
+        )
+
+        # Testing and saving results
+        print("Testing...")
+        test_results = tester.test()
+        results_path = os.path.join(config.output_dir, 'test results.json')
+        json.dump(test_results, open(results_path, 'w'), indent=True)
+        print(f"Test results saved to {results_path}")
+
+    else:
+        print("The model was not trained due to validation loss going up at epoch 0.")
+    print("Done.")
+    print("Exit.")
+    print()

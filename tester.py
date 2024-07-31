@@ -17,12 +17,13 @@ class IdiomaticityTester:
         # Prepare data structures to store results
         predictions = []
         correct_labels = []
-        total_loss = []
+        total_loss = 0
 
         # Put model in inference mode
         self.model.eval()
 
         with torch.no_grad():
+            i = 0
             for batch in self.test_loader:
                 input_ids, attention_mask, labels = batch
 
@@ -37,51 +38,18 @@ class IdiomaticityTester:
                 batch_predictions = torch.argmax(torch.softmax(logits, dim=1), dim=1)
                 predictions.extend(batch_predictions.tolist())
                 correct_labels.extend(labels.tolist())
-                total_loss.append(loss)
+                total_loss += loss.item()
+                i += 1
+                if i == 3:
+                    break
+
         test_results = {
             'predictions': predictions,
-            'loss': total_loss,
+            'true labels': correct_labels,
+            'loss': total_loss/len(self.test_loader),
             'accuracy': accuracy_score(correct_labels, predictions),
             'f1-score': f1_score(correct_labels, predictions),
             'precision': precision_score(correct_labels, predictions),
             'recall': recall_score(correct_labels, predictions)
         }
         return test_results
-
-
-# def get_predictions(self, external_dataloader=None):
-#     if external_dataloader:
-#         test_loader = external_dataloader
-#     else:
-#         test_loader = self.test_loader
-#
-#     self.model.eval()
-#     predictions = []
-#     prediction_probs = []
-#     true_labels = []
-#
-#     with torch.no_grad():
-#         i = 0
-#         for batch in test_loader:
-#             input_ids, attention_mask, labels = batch
-#             outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
-#             loss, logits = outputs.loss, outputs.logits
-#
-#             # Save `true` labels
-#             true_labels.extend(labels)
-#
-#             # Get probabilities
-#             probs = torch.softmax(logits, dim=1)
-#             prediction_probs.extend(probs)
-#
-#             # Get predictions
-#             preds = torch.argmax(probs, dim=1)
-#             predictions.extend(preds)
-#             i += 1
-#             if i == 10:
-#                 break
-#
-#         predictions = torch.stack(predictions)
-#         prediction_probs = torch.stack(prediction_probs)
-#         true_labels = torch.stack(true_labels)
-#         return predictions, prediction_probs, true_labels
