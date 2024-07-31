@@ -24,6 +24,8 @@ if __name__ == "__main__":
 
     # Prepare output directory
     make_dir(config.output_dir)
+    model_dir = os.path.join(config.output_dir, config.model_name)
+    make_dir(model_dir)
 
     # Setting up seed value
     random.seed(config.seed)
@@ -73,7 +75,7 @@ if __name__ == "__main__":
         val_loader=dev_loader,
         n_epochs=config.n_epochs,
         model_name=config.model_name,
-        output_dir=config.output_dir
+        output_dir=model_dir
     )
 
     print(f"Initialized training loop.")
@@ -85,7 +87,7 @@ if __name__ == "__main__":
 
     if trainer.best_model is not None:
         print(f"Testing the model from checkpoint: `{trainer.best_model}`")
-        checkpoint = os.path.join(config.output_dir, trainer.best_model)
+        checkpoint = os.path.join(model_dir, trainer.best_model)
 
         # Setting up model type and creating model instance
         model = IdiomaticityClassifier(model_type=MODEL_TYPE, freeze=config.freeze)
