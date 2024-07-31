@@ -30,7 +30,6 @@ class IdiomaticityTrainer:
         self.validation_accuracy = []
         self.best_model = None
 
-
     def train_batch(self, batch):
         self.model.train()
 
@@ -76,22 +75,13 @@ class IdiomaticityTrainer:
         for epoch in range(self.n_epochs):
             print(f" - Epoch {epoch + 1} out of {self.n_epochs}")
 
-            i = 0
             for batch in self.train_loader:
                 _ = self.train_batch(batch)
-                i += 1
-                if i == 3:
-                    break
 
             # Calculate validation loss and accuracy
             val_loss, val_acc = self.evaluate_model()
             print(f"\tValidation loss: {val_loss:.3f}")
             print(f"\tValidation accuracy: {val_acc:.3f}")
-
-            if epoch == 0:
-                val_loss = val_loss - 1
-            # if epoch == 1:
-            #     val_loss = val_loss - 2
 
             # Extract the validation loss of the previous epoch
             previous_loss = self.validation_loss[-1]
@@ -131,7 +121,6 @@ class IdiomaticityTrainer:
 
         with torch.no_grad():
 
-            i = 0
             for batch in self.val_loader:
 
                 # Extract batch and send to GPU
@@ -147,9 +136,6 @@ class IdiomaticityTrainer:
                 predictions = torch.argmax(torch.softmax(logits, dim=1), dim=1)
                 accuracy = (predictions == labels).sum().item() / len(predictions)
                 validation_accuracy += accuracy
-                i += 1
-                if i == 3:
-                    break
 
         validation_loss = validation_loss / len(self.val_loader)
         validation_accuracy = validation_accuracy / len(self.val_loader)

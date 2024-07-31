@@ -23,7 +23,6 @@ class IdiomaticityTester:
         self.model.eval()
 
         with torch.no_grad():
-            i = 0
             for batch in self.test_loader:
                 input_ids, attention_mask, labels = batch
 
@@ -39,9 +38,6 @@ class IdiomaticityTester:
                 predictions.extend(batch_predictions.tolist())
                 correct_labels.extend(labels.tolist())
                 total_loss += loss.item()
-                i += 1
-                if i == 3:
-                    break
 
         test_results = {
             'predictions': predictions,
