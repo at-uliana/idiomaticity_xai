@@ -48,6 +48,7 @@ if __name__ == "__main__":
 
     split_n = config.start_split
     experiment_data = []
+    experiment_predictions = []
 
     for i in range(config.n_models):
         current_experiment_data = {
@@ -156,6 +157,14 @@ if __name__ == "__main__":
                 if key not in ('predictions', 'true labels'):
                     current_experiment_data[key] = test_results[key]
 
+            experiment_predictions.append(
+                {
+                    'split': split_n,
+                    'predictions': test_results['predictions'],
+                    'true labels': test_results['true labels']
+                }
+            )
+
         else:
             print("The model was not trained due to validation loss going up at epoch 0.")
 
@@ -165,6 +174,11 @@ if __name__ == "__main__":
     # Save all the data
     out_data_path = os.path.join(config.output_dir, 'experiment_data.json')
     save_experiment_data(experiment_data, out_data_path)
-    print(f"Experiment data saved to `{out_data_path}`")
+    print(f"Experiment data saved to `{out_data_path}`\n")
+
+    # Save predictions
+    out_data_path = os.path.join(config.output_dir, 'predictions.json')
+    save_experiment_data(experiment_predictions, out_data_path)
+    print(f"Test predictions saved to `{out_data_path}`\n")
     print("Done.")
     print("Exit.")
