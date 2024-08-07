@@ -10,7 +10,8 @@ from data import IdiomDataset
 from utils import make_dir
 from torch.utils.data import DataLoader
 from classifier import IdiomaticityClassifier
-from utils import FineTuneMultipleConfig, train_test_dev_split, save_experiment_data
+from utils import train_test_dev_split, save_experiment_data
+from configs import FineTuneMultipleConfig
 from trainer import IdiomaticityTrainer
 from tester import IdiomaticityTester
 
@@ -20,7 +21,7 @@ if __name__ == "__main__":
     print("    START")
     print('=============\n')
 
-    parser = argparse.ArgumentParser(description='Hyperparameter optimization')
+    parser = argparse.ArgumentParser(description='Fine-tune and test multiple models')
     parser.add_argument("-c", "--config_file", type=str, required=True)
     args = parser.parse_args()
 
@@ -122,9 +123,13 @@ if __name__ == "__main__":
         print("Config file saved.")
         print('----------------------\n')
 
-        current_experiment_data['best epoch'] = trainer.best_epoch
-
         if trainer.best_model is not None:
+
+            # Add validation loss from the best epoch:
+            vals = trainer.validation_loss[1:]  # don't consider validation before fine-tuning
+            epoch_loss = vals[trainer.best_epoch]
+            current_experiment_data['validation loss'] = epoch_loss
+
             print(f"Testing the model from checkpoint: `{trainer.best_model}`")
             checkpoint = os.path.join(model_dir, trainer.best_model)
 
@@ -146,7 +151,7 @@ if __name__ == "__main__":
             test_results = tester.test()
             test_results['model checkpoint'] = trainer.best_model
 
-            # Save results
+            # Save intermediate results
             results_path = os.path.join(model_dir, f'test_results.json')
             json.dump(test_results, open(results_path, 'w'), indent=True)
             current_experiment_data['test results'] = results_path
@@ -161,7 +166,8 @@ if __name__ == "__main__":
                 {
                     'split': split_n,
                     'predictions': test_results['predictions'],
-                    'true labels': test_results['true labels']
+                    'true labels': test_results['true labels'],
+                    'probabilities': test_results['probabilities']
                 }
             )
 
@@ -179,6 +185,6 @@ if __name__ == "__main__":
     # Save predictions
     out_data_path = os.path.join(config.output_dir, 'predictions.json')
     save_experiment_data(experiment_predictions, out_data_path)
-    print(f"Test predictions saved to `{out_data_path}`\n")
+    print(f"Test results (predictions and probabilities) saved to `{out_data_path}`\n")
     print("Done.")
     print("Exit.")
