@@ -9,7 +9,8 @@ from data import IdiomDataset
 from utils import make_dir
 from torch.utils.data import DataLoader
 from classifier import IdiomaticityClassifier
-from utils import ExperimentConfig, train_test_dev_split
+from utils import train_test_dev_split
+from configs import ExperimentConfig
 from trainer import IdiomaticityTrainer
 from tester import IdiomaticityTester
 

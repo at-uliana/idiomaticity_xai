@@ -9,17 +9,14 @@ from data import IdiomDataset
 from utils import make_dir
 from torch.utils.data import DataLoader
 from classifier import IdiomaticityClassifier
-from utils import ExperimentConfig, train_test_dev_split
+from utils import train_test_dev_split
+from configs import ExperimentConfig
 from tester import IdiomaticityTester
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Testing fine-tuned models')
     parser.add_argument("-d", "--data_file", type=str, required=True)
     parser.add_argument("-s", "--split_file", type=str, required=True)
-    parser.add_argument("-m", "--model_file", type=str, required=True)
-    parser.add_argument("-m", "--output_file", type=str, required=True)
-    parser.add_argument("-m", "--max_length", type=int, required=False, default=256)
-    parser.add_argument("-m", "--batch-size", type=int, required=False, default=32)
 
     args = parser.parse_args()
 

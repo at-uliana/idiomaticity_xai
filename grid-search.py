@@ -10,7 +10,8 @@ from data import IdiomDataset
 from utils import make_dir
 from torch.utils.data import DataLoader
 from classifier import IdiomaticityClassifier
-from utils import GridSearchConfig, train_test_dev_split
+from utils import train_test_dev_split
+from configs import GridSearchConfig
 from trainer import IdiomaticityTrainer
 
 if __name__ == "__main__":
@@ -122,7 +123,7 @@ if __name__ == "__main__":
 
             current_experiment_data['# train batches'] = len(train_loader)
             current_experiment_data['# test batches'] = len(test_loader)
-            current_experiment_data['# dev batches'] = len(dev_loader)
+            # current_experiment_data['# dev batches'] = len(dev_loader)
 
             trainer = IdiomaticityTrainer(
                 model=model,

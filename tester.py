@@ -2,6 +2,7 @@ import torch
 import json
 import os
 from datetime import datetime
+import torch.nn.functional as F
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from utils import are_all_model_parameters_on_gpu, are_all_model_buffers_on_gpu
 
@@ -16,6 +17,7 @@ class IdiomaticityTester:
     def test(self):
         # Prepare data structures to store results
         predictions = []
+        all_probabilities = []
         correct_labels = []
         total_loss = 0
 
@@ -34,6 +36,12 @@ class IdiomaticityTester:
                 # Get outputs, calculate loss and predictions
                 outputs = self.model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
                 loss, logits = outputs.loss, outputs.logits
+
+                # Extract and save probabilities
+                probabilities = F.softmax(logits, dim=-1)
+                probabilities = probabilities.detach().cpu().tolist()
+                all_probabilities.extend(probabilities)
+
                 batch_predictions = torch.argmax(torch.softmax(logits, dim=1), dim=1)
                 predictions.extend(batch_predictions.tolist())
                 correct_labels.extend(labels.tolist())
@@ -42,7 +50,8 @@ class IdiomaticityTester:
         test_results = {
             'predictions': predictions,
             'true labels': correct_labels,
-            'loss': total_loss/len(self.test_loader),
+            'probabilities': all_probabilities,
+            'test loss': total_loss/len(self.test_loader),
             'accuracy': accuracy_score(correct_labels, predictions),
             'f1-score': f1_score(correct_labels, predictions),
             'precision': precision_score(correct_labels, predictions),

@@ -43,8 +43,9 @@ if __name__ == '__main__':
 
         # Print data stats
         idioms = data['idiom'].unique()
-        print(f"Number of idioms: {len(idioms)}")
+        print(f"Total number of idioms: {len(idioms)}")
         print(f"Data size: {len(data)}")
+        print()
 
         for i in range(args.n_splits):
             data['split'] = 'train'
@@ -85,10 +86,11 @@ if __name__ == '__main__':
             test_size_total += len(test_data)
             dev_size_total += len(dev_data)
 
-        print("-------------------------")
+        print("---------------------------------------")
         print(f"Average train size: {round(train_size_total / args.n_splits)}")
         print(f"Average test size: {round(test_size_total / args.n_splits)}")
         print(f"Average dev size: {round(dev_size_total / args.n_splits)}")
+        print("\nExit.")
 
     elif args.setting == 'one-shot' or args.setting == "oneshot":
         print(args)
@@ -101,15 +103,15 @@ if __name__ == '__main__':
 
         # Import data
         data = pd.read_csv(args.datadir, sep='\t')
-        print(f"Total idioms: {data['idiom'].nunique()}")
+        print(f"Total number of idioms: {data['idiom'].nunique()}")
+        print(f"Total data size: {len(data)}")
 
         def len_set(value):
             return len(set(value))
 
         table = data.groupby("idiom").agg({"sentence": len_set}).reset_index()
         idioms = table[table['sentence'] > 1]['idiom'].tolist()
-        print(f"Number of idioms: {len(idioms)}")
-        print(f"Data size: {len(data)}")
+        print(f"Number of idioms for selection: {len(idioms)}")
 
         for i in range(args.n_splits):
             idioms_test = np.random.choice(idioms, 250, replace=False)
@@ -132,11 +134,18 @@ if __name__ == '__main__':
                 index = group.sample(1).index.values[0]
                 back_to_training.append(index)
 
+            print(len(back_to_training))
+
+            print("Before:")
+            train_data = data[data['split'] == 'train']
+            print(len(train_data), train_data['idiom'].nunique())
+
             data.loc[back_to_training, 'split'] = 'train'
 
             # Write into the output directory
             name = f"split_{i}.tsv"
             path = os.path.join(args.outdir, name)
+            print(path)
             data['split'].to_csv(path, index=False)
 
             # Print stats
@@ -144,24 +153,24 @@ if __name__ == '__main__':
             test_data = data[data['split'] == 'test']
             dev_data = data[data['split'] == 'dev']
 
-            if args.verbose:
-                print(f"Train size: {len(train_data)}")
-                print(f"Test size: {len(test_data)}")
-                print(f"Dev size: {len(dev_data)}")
+            print(f"Train size: {len(train_data)}")
+            print(f"Test size: {len(test_data)}")
+            print(f"Dev size: {len(dev_data)}")
 
-                print(f"N idioms in train: {train_data['idiom'].nunique()}")
-                print(f"N idioms in test: {test_data['idiom'].nunique()}")
-                print(f"N idioms in dev: {dev_data['idiom'].nunique()}")
-                print()
+            print(f"N idioms in train: {train_data['idiom'].nunique()}")
+            print(f"N idioms in test: {test_data['idiom'].nunique()}")
+            print(f"N idioms in dev: {dev_data['idiom'].nunique()}")
+            print()
 
             train_size_total += len(train_data)
             test_size_total += len(test_data)
             dev_size_total += len(dev_data)
 
-        print("-------------------------")
+        print("---------------------------------------")
         print(f"Average train size: {round(train_size_total / args.n_splits)}")
         print(f"Average test size: {round(test_size_total / args.n_splits)}")
         print(f"Average dev size: {round(dev_size_total / args.n_splits)}")
+        print("\nExit.")
 
     elif args.setting == 'random':
 
@@ -171,13 +180,15 @@ if __name__ == '__main__':
 
         data = pd.read_csv(args.datadir, sep='\t')
         idioms = data['idiom'].nunique()
-        print(f"Total idioms: {idioms}")
+        print(f"Total number of idioms: {idioms}")
+        print(f"Total data size: {len(data)}")
+        print()
 
         print("Split size for all splits:")
         print(f"Train size: {len(data) - args.test_size - args.dev_size}")
         print(f"Test size: {args.test_size}")
         print(f"Dev size: {args.dev_size}")
-        print("--------------------------")
+        print("---------------------------------------")
 
         avg_n_idioms_train = 0
         avg_n_idioms_test = 0
@@ -215,7 +226,8 @@ if __name__ == '__main__':
             print(f"Number of idioms in dev: {dev_size}")
             print()
 
-        print()
-        print(f"Average number of idioms in train: {round(avg_n_idioms_train/idioms)}")
-        print(f"Average number of idioms in test: {round(avg_n_idioms_test/idioms)}")
-        print(f"Average number of idioms in dev {round(avg_n_idioms_dev/idioms)}")
+        print("---------------------------------------")
+        print(f"Average number of idioms in train: {round(avg_n_idioms_train/args.n_splits)}")
+        print(f"Average number of idioms in test: {round(avg_n_idioms_test/args.n_splits)}")
+        print(f"Average number of idioms in dev: {round(avg_n_idioms_dev/args.n_splits)}")
+        print("\nExit.")

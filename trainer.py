@@ -49,6 +49,8 @@ class IdiomaticityTrainer:
 
         # Calculate training accuracy
         logits = outputs.logits
+
+        # Extract predictions, calculate accuracy
         predictions = torch.argmax(torch.softmax(logits, dim=1), dim=1)
         accuracy = (predictions == labels).sum().item() / len(predictions)
 
@@ -145,6 +147,7 @@ class IdiomaticityTrainer:
 
     def save_model(self, path):
         torch.save(self.model.state_dict(), path)
+        torch.save(self.model, path)
 
     def save_config(self):
 
