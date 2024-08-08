@@ -14,6 +14,8 @@ from utils import train_test_dev_split, save_experiment_data
 from configs import FineTuneMultipleConfig
 from trainer import IdiomaticityTrainer
 from tester import IdiomaticityTester
+from transformers import XLMRobertaForSequenceClassification, XLMRobertaConfig
+
 
 if __name__ == "__main__":
 
@@ -77,7 +79,13 @@ if __name__ == "__main__":
 
         # Setting up model type and creating model instance
         print("Initializing the model...", end="")
-        model = IdiomaticityClassifier(model_type=MODEL_TYPE, freeze=config.freeze)
+
+        model = XLMRobertaForSequenceClassification.from_pretrained(MODEL_TYPE,
+                                                                    num_labels=2,
+                                                                    output_hidden_states=False,
+                                                                    output_attentions=False
+                                                                    )
+
         model.to(device)
         print("Done.")
 
@@ -123,21 +131,27 @@ if __name__ == "__main__":
         print("Config file saved.")
         print('----------------------\n')
 
+        prev_state_dict = trainer.model.state_dict()
+
         if trainer.best_model is not None:
+            print(f"Testing the model from checkpoint: `{trainer.best_model}`")
 
             # Add validation loss from the best epoch:
             vals = trainer.validation_loss[1:]  # don't consider validation before fine-tuning
             epoch_loss = vals[trainer.best_epoch]
             current_experiment_data['validation loss'] = epoch_loss
 
-            print(f"Testing the model from checkpoint: `{trainer.best_model}`")
-            checkpoint = os.path.join(model_dir, trainer.best_model)
+            # Initialize model from config
+            model_config = XLMRobertaConfig.from_pretrained(MODEL_TYPE)
+            config.num_labels = 2
+            model = XLMRobertaForSequenceClassification(model_config)
 
-            # Setting up model type and creating model instance
-            model = IdiomaticityClassifier(model_type=MODEL_TYPE, freeze=config.freeze)
-            model.load_state_dict(torch.load(checkpoint))
+            # Load state_dict
+            checkpoint_path = os.path.join(model_dir, trainer.best_model)
+            checkpoint = torch.load(checkpoint_path)
+            model.load_state_dict(checkpoint)
+
             model.to(device)
-            print("Initialized the model.")
 
             # Setting up tester
             tester = IdiomaticityTester(
@@ -159,7 +173,7 @@ if __name__ == "__main__":
 
             # Copy test results also to the experiment data
             for key in test_results:
-                if key not in ('predictions', 'true labels'):
+                if key not in ('predictions', 'true labels', 'probabilities'):
                     current_experiment_data[key] = test_results[key]
 
             experiment_predictions.append(
@@ -172,7 +186,7 @@ if __name__ == "__main__":
             )
 
         else:
-            print("The model was not trained due to validation loss going up at epoch 0.")
+            print("The model was not trained due to validation loss going up at after the first epoch.")
 
         split_n += 1
         experiment_data.append(current_experiment_data)
@@ -187,4 +201,7 @@ if __name__ == "__main__":
     save_experiment_data(experiment_predictions, out_data_path)
     print(f"Test results (predictions and probabilities) saved to `{out_data_path}`\n")
     print("Done.")
+
+    tokenizer.save_pretrained(config.output_dir)
+
     print("Exit.")

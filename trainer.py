@@ -100,12 +100,11 @@ class IdiomaticityTrainer:
             else:
                 # Save the model
                 print("Saving the checkpoint.")
-                name = self.model_name + f" epoch={epoch}.pt"
+                name = self.model_name + f" epoch={epoch}.pth"
                 path = os.path.join(self.output_dir, name)
                 self.save_model(path)
                 self.best_model = name
                 self.best_epoch = epoch
-                print()
 
                 # # Save the model
                 # if self.save_checkpoints:
@@ -124,7 +123,6 @@ class IdiomaticityTrainer:
         validation_accuracy = 0.0
 
         with torch.no_grad():
-
             for batch in self.val_loader:
 
                 # Extract batch and send to GPU
@@ -147,7 +145,7 @@ class IdiomaticityTrainer:
 
     def save_model(self, path):
         torch.save(self.model.state_dict(), path)
-        torch.save(self.model, path)
+        # torch.save(self.model, path)
 
     def save_config(self):
 
