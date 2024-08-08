@@ -2,6 +2,7 @@ import torch
 import json
 import os
 from datetime import datetime
+from copy import deepcopy
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from utils import are_all_model_parameters_on_gpu, are_all_model_buffers_on_gpu
 
@@ -30,6 +31,7 @@ class IdiomaticityTrainer:
         self.validation_accuracy = []
         self.best_model = None
         self.best_epoch = None
+        self.best_model_state_dict = None
 
     def train_batch(self, batch):
         self.model.train()
@@ -102,9 +104,10 @@ class IdiomaticityTrainer:
                 print("Saving the checkpoint.")
                 name = self.model_name + f" epoch={epoch}.pth"
                 path = os.path.join(self.output_dir, name)
-                self.save_model(path)
                 self.best_model = name
                 self.best_epoch = epoch
+                self.best_model_state_dict = deepcopy(self.model.state_dict())
+                self.save_model(path)
 
                 # # Save the model
                 # if self.save_checkpoints:
@@ -124,7 +127,6 @@ class IdiomaticityTrainer:
 
         with torch.no_grad():
             for batch in self.val_loader:
-
                 # Extract batch and send to GPU
                 input_ids, attention_mask, labels = batch
                 input_ids = input_ids.to(self.device)
@@ -144,8 +146,7 @@ class IdiomaticityTrainer:
         return validation_loss, validation_accuracy
 
     def save_model(self, path):
-        torch.save(self.model.state_dict(), path)
-        # torch.save(self.model, path)
+        torch.save(self.best_model_state_dict, path)
 
     def save_config(self):
 
@@ -159,4 +160,3 @@ class IdiomaticityTrainer:
 
         path = os.path.join(self.output_dir, "output.json")
         json.dump(output, open(path, 'w'), indent=True)
-
