@@ -95,17 +95,17 @@ class IdiomaticityTrainer:
             self.validation_accuracy.append(val_acc)
 
             # Stop training if validation loss is going up
-            if val_loss > previous_loss:
-                print("Early stopping. The checkpoint will not be saved.")
-                break
-            else:
-                # Save the model
-                print("Saving the checkpoint.")
-                name = self.model_name + f" epoch={epoch}.pth"
-                path = os.path.join(self.output_dir, name)
-                self.best_model = name
-                self.best_epoch = epoch
-                self.save_model(path)
+            # if val_loss > previous_loss:
+            #     print("Early stopping. The checkpoint will not be saved.")
+            #     break
+            # else:
+            # Save the model
+            print("Saving the checkpoint.")
+            name = self.model_name + f" epoch={epoch}.pth"
+            path = os.path.join(self.output_dir, name)
+            self.best_model = name
+            self.best_epoch = epoch
+            self.save_model(path)
 
                 # # Save the model
                 # if self.save_checkpoints:

@@ -9,10 +9,10 @@ from transformers import XLMRobertaTokenizer
 from data import IdiomDataset
 from utils import make_dir
 from torch.utils.data import DataLoader
-from classifier import IdiomaticityClassifier
 from utils import train_test_dev_split
 from configs import GridSearchConfig
 from trainer import IdiomaticityTrainer
+from transformers import XLMRobertaForSequenceClassification
 
 if __name__ == "__main__":
 
@@ -105,7 +105,13 @@ if __name__ == "__main__":
 
             # Setting up model type and creating model instance
             print("Initializing the model...", end="")
-            model = IdiomaticityClassifier(model_type=MODEL_TYPE, freeze=config.freeze)
+
+            model = XLMRobertaForSequenceClassification.from_pretrained(MODEL_TYPE,
+                                                                        num_labels=2,
+                                                                        output_hidden_states=False,
+                                                                        output_attentions=False
+                                                                        )
+
             model.to(device)
             current_experiment_data['pretrained model'] = MODEL_TYPE
             print("Done.")
@@ -117,13 +123,13 @@ if __name__ == "__main__":
 
             #
             train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
-            test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=True)
+            test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False)
             dev_loader = DataLoader(dev_set, batch_size=batch_size, shuffle=True)
             print("Done.")
 
             current_experiment_data['# train batches'] = len(train_loader)
-            current_experiment_data['# test batches'] = len(test_loader)
-            # current_experiment_data['# dev batches'] = len(dev_loader)
+            # current_experiment_data['# test batches'] = len(test_loader)
+            current_experiment_data['# dev batches'] = len(dev_loader)
 
             trainer = IdiomaticityTrainer(
                 model=model,
@@ -142,6 +148,8 @@ if __name__ == "__main__":
             trainer.save_config()
             print("Config file saved.")
 
+            current_experiment_data['best epoch'] = trainer.best_epoch
+            current_experiment_data['best model'] = trainer.best_model
             current_experiment_data['validation loss'] = trainer.validation_loss
             current_experiment_data['validation accuracy'] = trainer.validation_accuracy
 
