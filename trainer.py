@@ -14,7 +14,7 @@ def make_model_name():
 
 class IdiomaticityTrainer:
 
-    def __init__(self, model, optimizer, device, n_epochs, train_loader, val_loader,
+    def __init__(self, model, optimizer, device, n_epochs, train_loader, val_loader, early_stop=False,
                  model_name=None, output_dir='checkpoints'):
         self.model = model
         self.train_loader = train_loader
@@ -106,7 +106,6 @@ class IdiomaticityTrainer:
                 path = os.path.join(self.output_dir, name)
                 self.best_model = name
                 self.best_epoch = epoch
-                self.best_model_state_dict = deepcopy(self.model.state_dict())
                 self.save_model(path)
 
                 # # Save the model
@@ -146,7 +145,7 @@ class IdiomaticityTrainer:
         return validation_loss, validation_accuracy
 
     def save_model(self, path):
-        torch.save(self.best_model_state_dict, path)
+        torch.save(self.model.state_dict(), path)
 
     def save_config(self):
 

@@ -2,14 +2,12 @@ import os
 import random
 import json
 import argparse
-from itertools import product
 import torch
 from torch.optim import AdamW
 from transformers import XLMRobertaTokenizer
 from data import IdiomDataset
 from utils import make_dir
 from torch.utils.data import DataLoader
-from classifier import IdiomaticityClassifier
 from utils import train_test_dev_split, save_experiment_data
 from configs import FineTuneMultipleConfig
 from trainer import IdiomaticityTrainer
@@ -131,8 +129,6 @@ if __name__ == "__main__":
         print("Config file saved.")
         print('----------------------\n')
 
-        prev_state_dict = trainer.model.state_dict()
-
         if trainer.best_model is not None:
             print(f"Testing the model from checkpoint: `{trainer.best_model}`")
 
@@ -140,6 +136,7 @@ if __name__ == "__main__":
             vals = trainer.validation_loss[1:]  # don't consider validation before fine-tuning
             epoch_loss = vals[trainer.best_epoch]
             current_experiment_data['validation loss'] = epoch_loss
+            current_experiment_data['best epoch'] = trainer.best_epoch
 
             # Initialize model from config
             model_config = XLMRobertaConfig.from_pretrained(MODEL_TYPE)
