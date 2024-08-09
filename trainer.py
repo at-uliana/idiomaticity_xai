@@ -31,7 +31,6 @@ class IdiomaticityTrainer:
         self.validation_accuracy = []
         self.best_model = None
         self.best_epoch = None
-        self.best_model_state_dict = None
 
     def train_batch(self, batch):
         self.model.train()
