@@ -4,14 +4,13 @@ import random
 import argparse
 import torch
 import pandas as pd
-from torch.optim import AdamW
 from transformers import XLMRobertaTokenizer
 from data import IdiomDataset
 from utils import make_dir, save_experiment_data
 from torch.utils.data import DataLoader
-from classifier import IdiomaticityClassifier
 from configs import CrossLingualConfig
 from tester import IdiomaticityTester
+from transformers import XLMRobertaForSequenceClassification, XLMRobertaConfig
 
 
 if __name__ == "__main__":
@@ -54,32 +53,26 @@ if __name__ == "__main__":
     print("Done.")
 
     # Load data
-
     data = pd.read_csv(config.data_file, sep='\t')
-    data = data.head(500)
-    print(len(data))
     test_set = IdiomDataset(data, tokenizer=tokenizer, max_length=config.max_length)
     results = []
 
-    for checkpoint_name in os.listdir(config.checkpoints_dir):
-        print(f"Testing checkpoint {checkpoint_name}")
-
-        checkpoint_path = os.path.join(config.checkpoints_dir, checkpoint_name)
-
+    for model_name in os.listdir(config.checkpoints_dir):
+        print(f"Testing checkpoint {model_name}")
+        print("Loading data...")
         test_loader = DataLoader(test_set, batch_size=config.batch_size, shuffle=False)
 
-        print("Loading classifier.")
-        model = IdiomaticityClassifier(model_type=MODEL_TYPE)
-        checkpoint = torch.load(checkpoint_path,  map_location=torch.device('cpu'))
-        print('classifier.dense.bias' in checkpoint.keys())
-        print('classifier.out_proj.bias' in checkpoint.keys())
-        print('classifier.dense.weight' in checkpoint.keys())
-        print('classifier.out_proj.bias' in checkpoint.keys())
+        # Initialize model from config
+        model_config = XLMRobertaConfig.from_pretrained(MODEL_TYPE)
+        config.num_labels = 2
+        model = XLMRobertaForSequenceClassification(model_config)
 
-        # Load the state dictionary into the model
+        # Load state_dict
+        checkpoint_path = os.path.join(config.checkpoints_dir, model_name)
+        checkpoint = torch.load(checkpoint_path)
         model.load_state_dict(checkpoint)
+
         model.to(device)
-        print("Initialized the model.")
 
         # Setting up tester
         tester = IdiomaticityTester(
@@ -90,13 +83,14 @@ if __name__ == "__main__":
 
         # Testing
         print("Testing...")
+        print(model_name)
         test_results = tester.test()
 
         # Save results
-        test_results['model checkpoint'] = checkpoint_name
+        test_results['model checkpoint'] = model_name
         results.append(test_results)
-        checkpoint = checkpoint.strip('.pt')
-        results_path = os.path.join(config.output_dir, f'test_results_{checkpoint_name}.json')
+        model_name = model_name.split(".")[0]
+        results_path = os.path.join(config.output_dir, f'test_results_{model_name}.json')
         json.dump(test_results, open(results_path, 'w'), indent=True)
 
     # Save all data
