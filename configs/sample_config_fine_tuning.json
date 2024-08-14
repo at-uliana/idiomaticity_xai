@@ -9,5 +9,6 @@
   "model name": "lr=5e-5 b=16 setting=zeroshot",
   "output dir": "checkpoints",
   "freeze": [0,1,2,3],
-  "save checkpoints": false
+  "save checkpoints": false,
+  "text column": "sentence"
 }

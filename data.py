@@ -8,13 +8,14 @@ MODEL_TYPE = 'xlm-roberta-base'
 
 class IdiomDataset(Dataset):
 
-    def __init__(self, data, tokenizer, max_length):
+    def __init__(self, data, tokenizer, max_length, text_col='sentence'):
         self.data = data
         self.max_length = max_length
         self.tokenizer = tokenizer
+        self.text_col = text_col
 
     def __getitem__(self, i):
-        text = self.data.iloc[i]['sentence']
+        text = self.data.iloc[i][self.text_col]
         label = self.data.iloc[i]['label']
         tokens = self.tokenizer(text,
                                 padding='max_length',

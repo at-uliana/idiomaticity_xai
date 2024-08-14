@@ -55,10 +55,11 @@ if __name__ == "__main__":
     # Loading data
     print(f"Loading data from {config.data_file}.")
     print(f"Loading train-dev-test split from {config.split_file}.")
+
     train, dev, test = train_test_dev_split(config.data_file, config.split_file)
-    train_set = IdiomDataset(train, tokenizer=tokenizer, max_length=config.max_length)
-    test_set = IdiomDataset(test, tokenizer=tokenizer, max_length=config.max_length)
-    dev_set = IdiomDataset(dev, tokenizer=tokenizer, max_length=config.max_length)
+    train_set = IdiomDataset(train, tokenizer=tokenizer, max_length=config.max_length, text_col=config.text_col)
+    test_set = IdiomDataset(test, tokenizer=tokenizer, max_length=config.max_length, text_col=config.text_col)
+    dev_set = IdiomDataset(dev, tokenizer=tokenizer, max_length=config.max_length, text_col=config.text_col)
     print("Data loaded.")
 
     for learning_rate in config.learning_rates:

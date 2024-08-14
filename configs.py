@@ -28,6 +28,8 @@ class ExperimentConfig:
         self.output_dir = config['output dir']
         self.freeze = config['freeze']
         self.save_checkpoints = config['save checkpoints']
+        self.text_col = config['text column']
+
         # for key, value in config.items():
         #     setattr(self, key.replace(" ", "_"), value)
 
@@ -49,7 +51,7 @@ class FineTuneMultipleConfig:
         self.output_dir = config['output dir']
         self.freeze = config['freeze']
         self.setting = config['setting']
-        self.setting = config['setting']
+        self.text_col = config['text column']
 
 
 class GridSearchConfig:
@@ -67,4 +69,6 @@ class GridSearchConfig:
         self.output_dir = config['output dir']
         self.freeze = config['freeze']
         self.save_checkpoints = config['save checkpoints']
+        self.text_col = config['text column']
+
 

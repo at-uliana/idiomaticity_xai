@@ -32,9 +32,8 @@ def save_experiment_data(experiment_data, outdir):
         json.dump(experiment_data, open(outdir, 'w'), indent=True)
 
 
-def train_test_dev_split(data_path, split_path, cols=None):
-    if cols is None:
-        cols = ['idiom', 'sentence', 'label', 'transparency', 'head pos', 'corpus', 'split']
+def train_test_dev_split(data_path, split_path):
+    cols = ['idiom', 'sentence', 'paragraph', 'label', 'split']
     data = pd.read_csv(data_path, sep='\t')
     split = pd.read_csv(split_path, sep='\t')
     data['split'] = split['split']

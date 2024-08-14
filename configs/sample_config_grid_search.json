@@ -4,9 +4,11 @@
   "batch sizes": [8, 16, 32, 64],
   "max length": 256,
   "n epochs": 5,
+  "model base name": "zero-shot",
   "data file": "path/to/file.tsv",
   "split file": "path/to/data/split.tsv",
   "output dir": "grid_search",
   "freeze": [0,1,2,3],
-  "save checkpoints": true
+  "save checkpoints": true,
+  "text column": "sentence"
 }

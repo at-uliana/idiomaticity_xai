@@ -54,7 +54,7 @@ if __name__ == "__main__":
 
     # Load data
     data = pd.read_csv(config.data_file, sep='\t')
-    test_set = IdiomDataset(data, tokenizer=tokenizer, max_length=config.max_length)
+    test_set = IdiomDataset(data, tokenizer=tokenizer, max_length=config.max_length, text_col=config.text_col)
     results = []
 
     for model_name in os.listdir(config.checkpoints_dir):
